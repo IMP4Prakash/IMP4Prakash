@@ -1,339 +1,1006 @@
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#ef0b0b;color:#fff;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}.hero{position:relative;height:100svh;min-height:620px;overflow:hidden;background:#ef0b0b}.nav{position:fixed;z-index:10;top:max(16px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);display:flex;gap:22px;padding:12px 20px;border:1px solid #ffffff44;border-radius:999px;background:#18000040;backdrop-filter:blur(18px)}.nav a{color:#fff;text-decoration:none;font-size:12px;letter-spacing:.12em}canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}.copy{position:absolute;z-index:2;left:clamp(24px,7vw,110px);bottom:clamp(52px,9vh,100px);max-width:410px;text-shadow:0 3px 18px #0005}.copy span{letter-spacing:.22em;text-transform:uppercase;font-size:13px}.copy h1{font-size:clamp(58px,9vw,120px);line-height:.88;margin:8px 0 18px}.copy p{font-size:clamp(15px,1.5vw,19px);line-height:1.55}.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:22px}.actions a{padding:12px 18px;border-radius:999px;background:#fff;color:#111;text-decoration:none;font-weight:700}.actions .glass{background:#ffffff18;color:#fff;border:1px solid #ffffff88;backdrop-filter:blur(12px)}.hint{position:absolute;z-index:2;right:24px;bottom:24px;font-size:12px;opacity:.7}.section{min-height:55vh;padding:100px clamp(24px,8vw,120px);background:#0d0d12}.section:nth-of-type(even){background:#15151d}.section h2{font-size:clamp(42px,7vw,84px);margin:0 0 20px}.section p{max-width:700px;font-size:20px;line-height:1.6;color:#d8d8df}@media(max-width:700px){.nav{gap:12px;padding:10px 14px}.nav a{font-size:10px}.copy{left:20px;right:20px;bottom:64px;max-width:330px}.copy h1{font-size:64px}.hint{left:20px;right:auto;bottom:20px}canvas{opacity:.98}}
-/* =========================================================
-   PKX404 — PREMIUM CONTACT
-   ONLY affects #contact
-   ========================================================= */
+/* ==========================================================
+   PKX404 PORTFOLIO
+   ========================================================== */
 
-#contact{
+*{
+  box-sizing:border-box;
+}
+
+html{
+  scroll-behavior:smooth;
+}
+
+body{
+  margin:0;
+
+  background:#070910;
+  color:#fff;
+
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+}
+
+
+/* ==========================================================
+   NAVIGATION
+   ========================================================== */
+
+.nav{
+  position:fixed;
+  z-index:100;
+
+  top:max(16px,env(safe-area-inset-top));
+  left:50%;
+
+  transform:translateX(-50%);
+
+  display:flex;
+  gap:22px;
+
+  padding:12px 20px;
+
+  border:1px solid #ffffff44;
+  border-radius:999px;
+
+  background:#080a105e;
+
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+
+  box-shadow:
+    0 12px 40px #0005,
+    inset 0 1px 0 #ffffff1c;
+}
+
+.nav a{
+  color:#fff;
+
+  text-decoration:none;
+
+  font-size:12px;
+  letter-spacing:.12em;
+
+  opacity:.8;
+
+  transition:
+    opacity .2s ease,
+    transform .2s ease;
+}
+
+.nav a:hover{
+  opacity:1;
+  transform:translateY(-1px);
+}
+
+
+/* ==========================================================
+   HERO
+   ========================================================== */
+
+.hero{
   position:relative;
+
+  height:100svh;
+  min-height:620px;
+
   overflow:hidden;
-  min-height:90vh;
-  padding-top:120px;
-  padding-bottom:80px;
+
+  /*
+     Premium background replacing the old flat red.
+  */
 
   background:
-    radial-gradient(circle at 10% 15%,#27334a55 0,transparent 32%),
-    radial-gradient(circle at 90% 75%,#643a7050 0,transparent 35%),
-    linear-gradient(135deg,#080b10 0%,#10121a 48%,#0a0b10 100%);
+    radial-gradient(
+      circle at 72% 25%,
+      rgba(102,78,190,.32),
+      transparent 36%
+    ),
+
+    radial-gradient(
+      circle at 18% 80%,
+      rgba(26,116,132,.24),
+      transparent 40%
+    ),
+
+    radial-gradient(
+      circle at 50% 110%,
+      rgba(92,48,130,.22),
+      transparent 38%
+    ),
+
+    linear-gradient(
+      135deg,
+      #060810 0%,
+      #101522 48%,
+      #070910 100%
+    );
 }
 
-/* subtle premium light */
-#contact::before{
+
+/* Ambient hero lighting */
+
+.hero::before{
   content:"";
+
   position:absolute;
-  width:520px;
-  height:520px;
+  z-index:0;
+
+  width:55vw;
+  height:55vw;
+
+  min-width:500px;
+  min-height:500px;
+
+  right:-20vw;
+  top:-25vw;
+
   border-radius:50%;
-  top:-300px;
-  right:-120px;
-  background:#8666ff20;
-  filter:blur(70px);
+
+  background:
+    rgba(116,95,210,.11);
+
+  filter:blur(80px);
+
   pointer-events:none;
 }
 
-#contact::after{
-  content:"PKX404";
+
+/* ==========================================================
+   CHARACTER CANVAS
+   ========================================================== */
+
+canvas{
   position:absolute;
-  right:-25px;
-  bottom:-30px;
 
-  font-size:clamp(90px,16vw,230px);
-  font-weight:900;
-  letter-spacing:-.08em;
-
-  color:#ffffff08;
-  pointer-events:none;
-}
-
-
-/* CONTACT TITLE */
-
-#contact h2{
-  position:relative;
   z-index:1;
 
-  margin:0;
-  font-size:clamp(55px,8vw,105px);
-  line-height:.9;
-  letter-spacing:-.055em;
+  inset:0;
+
+  width:100%;
+  height:100%;
+
+  touch-action:none;
 }
 
-#contact>p{
+
+/* ==========================================================
+   HERO TEXT
+   ========================================================== */
+
+.copy{
+  position:absolute;
+  z-index:2;
+
+  left:clamp(24px,7vw,110px);
+  bottom:clamp(52px,9vh,100px);
+
+  max-width:410px;
+
+  text-shadow:
+    0 3px 18px #0008;
+}
+
+.copy>span{
+  letter-spacing:.22em;
+  text-transform:uppercase;
+
+  font-size:13px;
+
+  opacity:.85;
+}
+
+.copy h1{
+  margin:8px 0 18px;
+
+  font-size:clamp(58px,9vw,120px);
+  line-height:.88;
+
+  letter-spacing:-.05em;
+}
+
+.copy p{
+  font-size:clamp(15px,1.5vw,19px);
+  line-height:1.55;
+
+  color:#f3f3f5;
+}
+
+
+/* ==========================================================
+   HERO BUTTONS
+   ========================================================== */
+
+.actions{
+  display:flex;
+  gap:12px;
+
+  flex-wrap:wrap;
+
+  margin-top:22px;
+}
+
+.actions a{
+  padding:12px 18px;
+
+  border-radius:999px;
+
+  background:#fff;
+
+  color:#111;
+
+  text-decoration:none;
+  font-weight:700;
+
+  transition:
+    transform .25s ease,
+    box-shadow .25s ease;
+}
+
+.actions a:hover{
+  transform:translateY(-3px);
+
+  box-shadow:
+    0 10px 35px #0005;
+}
+
+.actions .glass{
+  background:#ffffff18;
+
+  color:#fff;
+
+  border:1px solid #ffffff88;
+
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+}
+
+
+/* ==========================================================
+   CURSOR HINT
+   ========================================================== */
+
+.hint{
+  position:absolute;
+  z-index:2;
+
+  right:24px;
+  bottom:24px;
+
+  font-size:12px;
+
+  opacity:.65;
+}
+
+
+/* ==========================================================
+   ABOUT + PROJECTS
+   ========================================================== */
+
+.section{
   position:relative;
-  z-index:1;
 
-  margin:22px 0 42px;
-  font-size:16px;
-  letter-spacing:.04em;
-  color:#aeb3c0;
+  min-height:55vh;
+
+  padding:
+    100px
+    clamp(24px,8vw,120px);
+
+  background:#0d0f16;
 }
 
-#contact>p::before{
-  content:"CONNECT // PKX404";
+.section:nth-of-type(even){
+  background:#12151e;
+}
+
+.section-label{
   display:block;
 
-  margin-bottom:15px;
+  margin-bottom:20px;
 
   font-size:10px;
   font-weight:700;
-  letter-spacing:.3em;
 
-  color:#fff;
-  opacity:.55;
+  letter-spacing:.25em;
+
+  color:#ffffff70;
+}
+
+.section h2{
+  margin:0 0 20px;
+
+  font-size:clamp(42px,7vw,84px);
+
+  letter-spacing:-.04em;
+}
+
+.section p{
+  max-width:700px;
+
+  font-size:20px;
+  line-height:1.6;
+
+  color:#d8d8df;
 }
 
 
-/* GRID */
+/* ==========================================================
+   CONTACT
+   ========================================================== */
 
-.contact-info{
+.contact-section{
   position:relative;
-  z-index:2;
 
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:14px;
+  min-height:100vh;
 
-  width:min(950px,100%);
-  margin-top:0;
-}
-
-
-/* GLASS CARDS */
-
-.contact-info>a,
-.contact-location{
-  position:relative;
-  min-height:145px;
-
-  padding:27px 28px;
-
-  display:flex;
-  flex-direction:column;
-  justify-content:flex-end;
-  gap:8px;
+  padding:
+    120px
+    clamp(24px,8vw,120px)
+    55px;
 
   overflow:hidden;
 
-  border:1px solid #ffffff20;
-  border-radius:24px;
-
   background:
+    radial-gradient(
+      circle at 8% 20%,
+      rgba(56,92,145,.22),
+      transparent 31%
+    ),
+
+    radial-gradient(
+      circle at 92% 70%,
+      rgba(119,71,144,.22),
+      transparent 34%
+    ),
+
     linear-gradient(
-      145deg,
-      #ffffff0f,
-      #ffffff04
+      135deg,
+      #070910,
+      #0d1018 50%,
+      #08090e
     );
-
-  box-shadow:
-    inset 0 1px 0 #ffffff16,
-    0 20px 60px #00000025;
-
-  backdrop-filter:blur(22px);
-  -webkit-backdrop-filter:blur(22px);
-
-  color:#fff;
-  text-decoration:none;
-
-  transition:
-    transform .35s cubic-bezier(.2,.8,.2,1),
-    border-color .35s ease,
-    box-shadow .35s ease;
 }
 
 
-/* glowing orb */
+/* Background watermark */
 
-.contact-info>a::before,
-.contact-location::before{
-  content:"";
+.contact-section::after{
+  content:"PKX404";
 
   position:absolute;
-  width:130px;
-  height:130px;
 
-  left:-65px;
-  top:-65px;
+  right:-30px;
+  bottom:-55px;
+
+  font-size:clamp(110px,18vw,260px);
+  font-weight:900;
+
+  letter-spacing:-.09em;
+
+  color:#ffffff05;
+
+  pointer-events:none;
+}
+
+
+/* ==========================================================
+   CONTACT AMBIENT ORBS
+   ========================================================== */
+
+.contact-orb{
+  position:absolute;
 
   border-radius:50%;
 
-  background:#6db7ff28;
-  filter:blur(25px);
+  pointer-events:none;
 
-  transition:.4s ease;
+  filter:blur(90px);
+
+  animation:
+    ambientMove 10s ease-in-out infinite alternate;
 }
 
-.contact-info>a:nth-child(2)::before{
-  background:#936dff2d;
+.orb-one{
+  width:420px;
+  height:420px;
+
+  left:-200px;
+  top:100px;
+
+  background:#446cff22;
 }
 
-.contact-info>a:nth-child(3)::before{
-  background:#d66cff2c;
+.orb-two{
+  width:450px;
+  height:450px;
+
+  right:-220px;
+  bottom:40px;
+
+  background:#a858c522;
+
+  animation-delay:-4s;
 }
 
-.contact-info>a:nth-child(4)::before{
-  background:#ff8a5c28;
-}
+@keyframes ambientMove{
 
-.contact-location::before{
-  background:#ffc45b27;
-}
+  from{
+    transform:
+      translate3d(0,0,0)
+      scale(.9);
+  }
 
+  to{
+    transform:
+      translate3d(40px,-35px,0)
+      scale(1.12);
+  }
 
-/* HOVER */
-
-.contact-info>a:hover{
-  transform:translateY(-7px);
-
-  border-color:#ffffff55;
-
-  box-shadow:
-    inset 0 1px 0 #ffffff30,
-    0 25px 70px #00000045;
-}
-
-.contact-info>a:hover::before{
-  width:180px;
-  height:180px;
 }
 
 
-/* LABEL */
+/* ==========================================================
+   CONTACT CONTAINER
+   ========================================================== */
 
-.contact-info small{
-  position:absolute;
-  top:24px;
-  left:27px;
+.contact-container{
+  position:relative;
+  z-index:2;
 
-  font-size:9px;
+  width:min(1180px,100%);
+
+  margin:auto;
+}
+
+
+/* ==========================================================
+   CONTACT HEADING
+   ========================================================== */
+
+.contact-heading{
+  max-width:880px;
+
+  margin-bottom:60px;
+}
+
+.contact-label{
+  display:block;
+
+  margin-bottom:20px;
+
+  font-size:10px;
   font-weight:700;
-  letter-spacing:.22em;
 
-  color:#ffffff72;
-}
-
-
-/* DETAILS */
-
-.contact-info strong{
-  position:relative;
-
-  font-size:clamp(16px,1.5vw,20px);
-  font-weight:550;
-  letter-spacing:-.02em;
-}
-
-
-/* arrow icon */
-
-.contact-info>a::after{
-  content:"↗";
-
-  position:absolute;
-  right:22px;
-  top:20px;
-
-  width:35px;
-  height:35px;
-
-  display:grid;
-  place-items:center;
-
-  border:1px solid #ffffff2d;
-  border-radius:50%;
-
-  color:#fff;
-
-  transition:
-    background .3s,
-    color .3s,
-    transform .3s;
-}
-
-.contact-info>a:hover::after{
-  background:#fff;
-  color:#090a0e;
-  transform:rotate(45deg);
-}
-
-
-/* LOCATION = FEATURE CARD */
-
-.contact-location{
-  grid-column:1/-1;
-
-  min-height:165px;
-
-  background:
-    radial-gradient(circle at 90% 30%,#ffc45b18,transparent 30%),
-    linear-gradient(145deg,#ffffff0d,#ffffff03);
-}
-
-.contact-location strong{
-  font-size:24px;
-}
-
-.contact-location span{
-  position:relative;
-
-  color:#aeb3c0;
-  font-size:14px;
-}
-
-
-/* small status line */
-
-.contact-location::after{
-  content:"●  PKX404  •  NEW DELHI";
-
-  position:absolute;
-  right:27px;
-  bottom:28px;
-
-  font-size:9px;
-  letter-spacing:.2em;
+  letter-spacing:.27em;
 
   color:#ffffff75;
 }
 
+.contact-heading h2{
+  margin:0;
 
-/* MOBILE */
+  max-width:950px;
 
-@media(max-width:700px){
+  font-size:clamp(50px,7vw,100px);
 
-  #contact{
+  line-height:.92;
+
+  letter-spacing:-.055em;
+
+  font-weight:550;
+}
+
+.contact-heading h2 em{
+  display:block;
+
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif;
+
+  font-weight:400;
+
+  color:#ffffff80;
+}
+
+.contact-heading p{
+  max-width:520px;
+
+  margin:28px 0 0;
+
+  color:#aeb3c0;
+
+  font-size:15px;
+  line-height:1.7;
+}
+
+
+/* ==========================================================
+   CONTACT GRID
+   ========================================================== */
+
+.contact-grid{
+  display:grid;
+
+  grid-template-columns:
+    repeat(3,minmax(0,1fr));
+
+  gap:14px;
+}
+
+
+/* ==========================================================
+   CONTACT CARDS
+   ========================================================== */
+
+.contact-card{
+  position:relative;
+
+  min-height:380px;
+
+  padding:25px;
+
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+
+  overflow:hidden;
+
+  border:
+    1px solid
+    rgba(255,255,255,.11);
+
+  border-radius:26px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.075),
+      rgba(255,255,255,.018)
+    );
+
+  backdrop-filter:blur(22px);
+  -webkit-backdrop-filter:blur(22px);
+
+  box-shadow:
+    inset 0 1px 0 #ffffff13,
+    0 30px 80px #0003;
+
+  transition:
+    transform .4s cubic-bezier(.2,.8,.2,1),
+    border-color .4s ease,
+    box-shadow .4s ease;
+}
+
+
+/* colored ambient light */
+
+.contact-card::before{
+  content:"";
+
+  position:absolute;
+
+  width:220px;
+  height:220px;
+
+  left:-140px;
+  top:-140px;
+
+  border-radius:50%;
+
+  background:#6596ff2a;
+
+  filter:blur(50px);
+
+  transition:
+    transform .6s ease,
+    opacity .4s ease;
+}
+
+.email-card::before{
+  background:#aa65ff2b;
+}
+
+.location-card::before{
+  background:#ffbd5c2a;
+}
+
+
+/* Card hover */
+
+.contact-card:hover{
+  transform:translateY(-8px);
+
+  border-color:
+    rgba(255,255,255,.3);
+
+  box-shadow:
+    inset 0 1px 0 #ffffff25,
+    0 35px 100px #0006;
+}
+
+.contact-card:hover::before{
+  transform:scale(1.4);
+}
+
+
+/* ==========================================================
+   CARD TOP
+   ========================================================== */
+
+.card-top{
+  position:relative;
+  z-index:2;
+
+  display:flex;
+
+  align-items:center;
+  justify-content:space-between;
+
+  color:#ffffff65;
+
+  font-size:10px;
+
+  letter-spacing:.18em;
+}
+
+.card-icon,
+.location-icon{
+  width:40px;
+  height:40px;
+
+  display:grid;
+  place-items:center;
+
+  border:
+    1px solid
+    #ffffff25;
+
+  border-radius:50%;
+
+  color:#fff;
+
+  font-size:17px;
+
+  transition:
+    transform .35s ease,
+    background .35s ease,
+    color .35s ease;
+}
+
+.contact-card:hover .card-icon{
+  background:#fff;
+
+  color:#080910;
+
+  transform:rotate(45deg);
+}
+
+
+/* ==========================================================
+   CARD CONTENT
+   ========================================================== */
+
+.card-main{
+  position:relative;
+  z-index:2;
+}
+
+.card-main>small{
+  display:block;
+
+  margin-bottom:8px;
+
+  color:#ffffff68;
+
+  font-size:9px;
+
+  letter-spacing:.22em;
+}
+
+.card-main h3{
+  margin:0 0 28px;
+
+  font-size:
+    clamp(27px,2.4vw,36px);
+
+  font-weight:450;
+
+  letter-spacing:-.035em;
+}
+
+
+/* clickable contact lines */
+
+.card-main a{
+  display:flex;
+
+  flex-direction:column;
+
+  gap:4px;
+
+  padding:13px 0;
+
+  border-top:
+    1px solid
+    #ffffff15;
+
+  color:#ffffffc4;
+
+  text-decoration:none;
+
+  transition:
+    color .25s ease,
+    padding-left .25s ease;
+}
+
+.card-main a span{
+  font-size:8px;
+
+  letter-spacing:.18em;
+
+  color:#ffffff65;
+}
+
+.card-main a strong{
+  font-size:14px;
+
+  font-weight:500;
+}
+
+.card-main a:hover{
+  padding-left:7px;
+
+  color:#fff;
+}
+
+
+/* ==========================================================
+   LOCATION
+   ========================================================== */
+
+.address{
+  display:flex;
+
+  flex-direction:column;
+
+  gap:6px;
+
+  padding-top:15px;
+
+  border-top:
+    1px solid
+    #ffffff15;
+
+  color:#aeb3c0;
+
+  font-size:14px;
+}
+
+.address strong{
+  margin-bottom:3px;
+
+  color:#fff;
+
+  font-size:18px;
+
+  font-weight:500;
+}
+
+
+/* ==========================================================
+   CONTACT FOOTER
+   ========================================================== */
+
+.contact-footer{
+  display:grid;
+
+  grid-template-columns:
+    1fr auto 1fr;
+
+  align-items:end;
+
+  margin-top:70px;
+
+  padding-top:25px;
+
+  border-top:
+    1px solid
+    #ffffff1d;
+}
+
+
+/* Available */
+
+.availability{
+  display:flex;
+
+  align-items:center;
+
+  gap:10px;
+
+  color:#ffffff70;
+
+  font-size:9px;
+
+  letter-spacing:.18em;
+}
+
+.availability i{
+  width:7px;
+  height:7px;
+
+  border-radius:50%;
+
+  background:#fff;
+
+  box-shadow:
+    0 0 0 5px
+    #ffffff0c;
+
+  animation:
+    availabilityPulse
+    1.8s ease-in-out
+    infinite;
+}
+
+@keyframes availabilityPulse{
+
+  0%,
+  100%{
+    opacity:.45;
+    transform:scale(.8);
+  }
+
+  50%{
+    opacity:1;
+    transform:scale(1.15);
+  }
+
+}
+
+
+/* PKX404 */
+
+.pkx-logo{
+  font-size:
+    clamp(38px,5vw,66px);
+
+  font-weight:850;
+
+  line-height:.8;
+
+  letter-spacing:-.07em;
+}
+
+.pkx-logo span{
+  display:inline-block;
+
+  margin-left:2px;
+
+  animation:
+    cursorBlink
+    .9s steps(1)
+    infinite;
+}
+
+@keyframes cursorBlink{
+
+  50%{
+    opacity:0;
+  }
+
+}
+
+
+/* Real name */
+
+.real-name{
+  text-align:right;
+
+  color:#ffffff70;
+
+  font-size:9px;
+
+  letter-spacing:.18em;
+}
+
+
+/* ==========================================================
+   MOBILE
+   ========================================================== */
+
+@media(max-width:800px){
+
+  .nav{
+    gap:12px;
+
+    padding:10px 14px;
+  }
+
+  .nav a{
+    font-size:10px;
+  }
+
+
+  .copy{
+    left:20px;
+    right:20px;
+
+    bottom:64px;
+
+    max-width:330px;
+  }
+
+  .copy h1{
+    font-size:64px;
+  }
+
+  .hint{
+    left:20px;
+    right:auto;
+
+    bottom:20px;
+  }
+
+
+  canvas{
+    opacity:.98;
+  }
+
+
+  .contact-section{
     min-height:auto;
-    padding-top:90px;
-    padding-bottom:60px;
+
+    padding:
+      95px
+      18px
+      40px;
   }
 
-  #contact h2{
-    font-size:58px;
+
+  .contact-heading{
+    margin-bottom:45px;
   }
 
-  .contact-info{
+
+  .contact-heading h2{
+    font-size:
+      clamp(48px,14vw,72px);
+  }
+
+
+  .contact-grid{
     grid-template-columns:1fr;
   }
 
-  .contact-info>a,
-  .contact-location{
-    min-height:135px;
-    border-radius:20px;
+
+  .contact-card{
+    min-height:310px;
   }
 
-  .contact-location{
-    grid-column:auto;
-    min-height:170px;
+
+  .contact-footer{
+    grid-template-columns:1fr;
+
+    gap:35px;
+
+    align-items:start;
   }
 
-  .contact-location::after{
-    position:relative;
-    right:auto;
-    bottom:auto;
-    margin-top:12px;
+
+  .pkx-logo{
+    order:-1;
+
+    font-size:50px;
   }
 
-  #contact::after{
-    font-size:100px;
-    bottom:0;
+
+  .real-name{
+    text-align:left;
   }
+
 }
