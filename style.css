@@ -1,1 +1,375 @@
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#ef0b0b;color:#fff;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}.hero{position:relative;height:100svh;min-height:620px;overflow:hidden;background:#ef0b0b}.nav{position:fixed;z-index:10;top:max(16px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);display:flex;gap:22px;padding:12px 20px;border:1px solid #ffffff44;border-radius:999px;background:#18000040;backdrop-filter:blur(18px)}.nav a{color:#fff;text-decoration:none;font-size:12px;letter-spacing:.12em}canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}.copy{position:absolute;z-index:2;left:clamp(24px,7vw,110px);bottom:clamp(52px,9vh,100px);max-width:410px;text-shadow:0 3px 18px #0005}.copy span{letter-spacing:.22em;text-transform:uppercase;font-size:13px}.copy h1{font-size:clamp(58px,9vw,120px);line-height:.88;margin:8px 0 18px}.copy p{font-size:clamp(15px,1.5vw,19px);line-height:1.55}.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:22px}.actions a{padding:12px 18px;border-radius:999px;background:#fff;color:#111;text-decoration:none;font-weight:700}.actions .glass{background:#ffffff18;color:#fff;border:1px solid #ffffff88;backdrop-filter:blur(12px)}.hint{position:absolute;z-index:2;right:24px;bottom:24px;font-size:12px;opacity:.7}.section{min-height:55vh;padding:100px clamp(24px,8vw,120px);background:#0d0d12}.section:nth-of-type(even){background:#15151d}.section h2{font-size:clamp(42px,7vw,84px);margin:0 0 20px}.section p{max-width:700px;font-size:20px;line-height:1.6;color:#d8d8df}@media(max-width:700px){.nav{gap:12px;padding:10px 14px}.nav a{font-size:10px}.copy{left:20px;right:20px;bottom:64px;max-width:330px}.copy h1{font-size:64px}.hint{left:20px;right:auto;bottom:20px}canvas{opacity:.98}}
+/* =========================================================
+   PKX404 — CONTACT EXPERIENCE
+   ========================================================= */
+
+.contact-section {
+  position: relative;
+  min-height: 100vh;
+  padding: 120px 6vw 50px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(255,255,255,.07), transparent 28%),
+    radial-gradient(circle at 85% 75%, rgba(255,255,255,.04), transparent 25%),
+    #080808;
+  color: #fff;
+}
+
+.contact-glow {
+  position: absolute;
+  width: 520px;
+  height: 520px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.055);
+  filter: blur(100px);
+  right: -180px;
+  top: -180px;
+  pointer-events: none;
+}
+
+.contact-wrap {
+  position: relative;
+  z-index: 2;
+  width: min(1180px, 100%);
+  margin: auto;
+}
+
+
+/* ---------- HEADING ---------- */
+
+.contact-head {
+  max-width: 850px;
+  margin-bottom: 65px;
+}
+
+.contact-kicker {
+  display: inline-block;
+  margin-bottom: 22px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .28em;
+  opacity: .55;
+}
+
+.contact-head h2 {
+  margin: 0;
+  max-width: 900px;
+  font-size: clamp(48px, 7vw, 100px);
+  line-height: .92;
+  letter-spacing: -.055em;
+  font-weight: 500;
+}
+
+.contact-head h2 em {
+  display: block;
+  font-family: Georgia, serif;
+  font-weight: 400;
+  opacity: .58;
+}
+
+.contact-head > p {
+  max-width: 520px;
+  margin-top: 28px;
+  color: rgba(255,255,255,.55);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+
+/* ---------- CARDS ---------- */
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.contact-card {
+  position: relative;
+  min-height: 370px;
+  padding: 25px;
+  border: 1px solid rgba(255,255,255,.11);
+  border-radius: 25px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.075),
+      rgba(255,255,255,.018)
+    );
+
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  overflow: hidden;
+
+  transition:
+    transform .4s cubic-bezier(.2,.8,.2,1),
+    border-color .4s ease,
+    background .4s ease;
+}
+
+.contact-card::before {
+  content: "";
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.09);
+  filter: blur(65px);
+  left: -130px;
+  top: -130px;
+  opacity: 0;
+  transition: opacity .4s ease;
+}
+
+.contact-card:hover {
+  transform: translateY(-8px);
+  border-color: rgba(255,255,255,.28);
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.11),
+      rgba(255,255,255,.025)
+    );
+}
+
+.contact-card:hover::before {
+  opacity: 1;
+}
+
+
+/* ---------- CARD TOP ---------- */
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  font-size: 11px;
+  letter-spacing: .15em;
+  color: rgba(255,255,255,.4);
+}
+
+.card-arrow,
+.location-symbol {
+  display: grid;
+  place-items: center;
+
+  width: 38px;
+  height: 38px;
+
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: 50%;
+
+  font-size: 17px;
+
+  transition:
+    background .3s ease,
+    color .3s ease,
+    transform .3s ease;
+}
+
+.contact-card:hover .card-arrow {
+  background: #fff;
+  color: #000;
+  transform: rotate(45deg);
+}
+
+
+/* ---------- CARD CONTENT ---------- */
+
+.card-content small {
+  display: block;
+  margin-bottom: 8px;
+
+  font-size: 10px;
+  letter-spacing: .2em;
+  color: rgba(255,255,255,.4);
+}
+
+.card-content h3 {
+  margin: 0 0 30px;
+
+  font-size: clamp(26px, 2.3vw, 35px);
+  font-weight: 400;
+  letter-spacing: -.035em;
+}
+
+.card-content a {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+
+  padding: 13px 0;
+
+  color: rgba(255,255,255,.75);
+  text-decoration: none;
+
+  font-size: 14px;
+
+  border-top: 1px solid rgba(255,255,255,.09);
+
+  transition:
+    color .25s ease,
+    padding-left .25s ease;
+}
+
+.card-content a span {
+  margin-bottom: 4px;
+
+  font-size: 8px;
+  letter-spacing: .17em;
+  opacity: .4;
+}
+
+.card-content a:hover {
+  color: #fff;
+  padding-left: 8px;
+}
+
+
+/* ---------- LOCATION ---------- */
+
+.address {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  padding-top: 15px;
+  border-top: 1px solid rgba(255,255,255,.09);
+
+  color: rgba(255,255,255,.57);
+  font-size: 14px;
+}
+
+.address strong {
+  margin-bottom: 4px;
+
+  color: #fff;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+
+/* ---------- BOTTOM BAR ---------- */
+
+.contact-bottom {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: end;
+
+  margin-top: 75px;
+  padding-top: 25px;
+
+  border-top: 1px solid rgba(255,255,255,.12);
+}
+
+.availability,
+.contact-name {
+  font-size: 9px;
+  letter-spacing: .17em;
+  color: rgba(255,255,255,.45);
+}
+
+.availability {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.availability i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+
+  background: #fff;
+
+  box-shadow: 0 0 0 5px rgba(255,255,255,.07);
+
+  animation: pkxPulse 2s infinite;
+}
+
+@keyframes pkxPulse {
+  0%, 100% {
+    opacity: .45;
+    transform: scale(.85);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+
+/* ---------- PKX404 SIGNATURE ---------- */
+
+.contact-signature {
+  font-size: clamp(35px, 5vw, 65px);
+  font-weight: 800;
+  letter-spacing: -.07em;
+  line-height: .8;
+}
+
+.contact-signature span {
+  display: inline-block;
+  margin-left: 3px;
+
+  animation: pkxBlink .9s steps(1) infinite;
+}
+
+@keyframes pkxBlink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.contact-name {
+  text-align: right;
+}
+
+
+/* ---------- MOBILE ---------- */
+
+@media (max-width: 800px) {
+
+  .contact-section {
+    padding: 95px 18px 35px;
+  }
+
+  .contact-head {
+    margin-bottom: 45px;
+  }
+
+  .contact-head h2 {
+    font-size: clamp(48px, 14vw, 72px);
+  }
+
+  .contact-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-card {
+    min-height: 300px;
+  }
+
+  .contact-bottom {
+    grid-template-columns: 1fr;
+    gap: 35px;
+    align-items: start;
+  }
+
+  .contact-signature {
+    order: -1;
+    font-size: 48px;
+  }
+
+  .contact-name {
+    text-align: left;
+  }
+}
