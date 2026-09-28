@@ -6,24 +6,24 @@ A first working implementation for `/xparty/` on `pkx404.github.io`, with a sepa
 
 - Eight-character, randomly generated room codes; no email, account or Google login for participants.
 - Two-person rooms by default. Optional four-person mesh rooms are a beta feature.
-- Host-only source selection, shared play/pause/seek, host clock anchors and threshold-based drift correction.
-- YouTube embedded playback; optional search through a server-side YouTube Data API key.
+- Host-only source selection, shared play/pause/seek, a shared server clock and threshold-based drift correction.
+- YouTube embedded playback; in-app public search, with the official Data API supported via a server-side key.
 - Room-scoped text chat, camera and microphone controls, real connection indicators.
 - Mobile layout and a cinema button that keeps the shared video and call tiles together.
 - Separate local movie and conversation volume. Web Audio mixes call audio and local files; YouTube uses its player API. Some mobile browsers restrict YouTube volume to hardware controls.
-- Host-only local-file selection: WebRTC transfers the file to guests. No server video upload and no second manual file selection. Playback waits for everyone to load the file.
-- Room locking, 30-second connection-resume window, 12-hour room expiry, join rate limits, origin checks, bounded messages and file size.
+- Host-only local-file selection: authenticated HTTPS chunk uploads temporarily store the file on the room server, then guests download it automatically. Playback waits for online participants to load metadata. Files are deleted when replaced or the room ends.
+- Room locking, refresh recovery, kick, host transfer, camera approval, microphone moderation, queue voting, join rate limits and bounded uploads. No application room-expiry timer.
 
 ## Important limits
 
-- **Not deployed yet.** A static GitHub Pages upload alone will not make live rooms work.
+- Live prototype: https://pkx404-xparty.onrender.com . The GitHub Pages integration remains in draft PR #1.
 - **Real phone/tablet/desktop tests over separate networks remain a deployment acceptance step.** Headless browser tests are not equivalent.
-- **Local video maximum: 250 MB.** Each guest receives the entire file in browser memory before playback. This is a transfer-first implementation, not progressive streaming of multi-GB movies. Each recipient necessarily receives a copy of the media. Keep the host tab open. Re-select the file if the host reloads.
+- **Local video maximum: 250 MB.** Each guest receives the entire file in browser memory before playback. This is a transfer-first implementation, not progressive streaming of multi-GB movies. Each recipient necessarily receives a copy of the media. Keep the host tab open until upload completes. Once uploaded, refresh downloads the same file again.
 - **TURN is needed for reliable network coverage.** Default STUN supports direct connections where possible. Without TURN, some Wi-Fi/mobile combinations fail. A Node web service does not replace a TURN service.
 - Calls use a peer mesh, capped at four. Four-person rooms require more upload bandwidth and have not been certified on low-end phones.
-- Rooms and chat have no database. Restarting/deploying the backend ends all rooms. Messages are held only in open browser views, not stored server-side.
+- Rooms and chat have no database. Restarting/deploying the backend ends all rooms. The last 100 messages are held in room memory and restored on refresh.
 - Keep one backend instance: in-memory rooms do not work across uncoordinated replicas.
-- The host leaving ends the room. A dropped connection has 30 seconds to recover.
+- Leaving transfers host ownership to another participant. Disconnected participants keep their slots until they leave, are removed, or the room ends. Session credentials are retained in sessionStorage for same-tab refresh; a new tab/device needs a new join.
 - Browser autoplay restrictions can require tapping Play or Enable sound. Background/screen-lock operation is not promised.
 - YouTube availability, ads, embedding permissions, browser restrictions and buffering may prevent exact frame synchronization. The app does not bypass these restrictions.
 - Code-only entry is possession-based privacy. Anyone given the code can join while unlocked. There is no email verification or claim of end-to-end encrypted text chat. Use TLS in production. WebRTC encrypts media in transit; peer IP addresses may be exposed by direct connections.
@@ -53,7 +53,7 @@ The frontend can remain on GitHub Pages, but room signaling needs a continuously
 3. Set `ALLOWED_ORIGINS=https://pkx404.github.io`. If serving the interface from the backend too, add that HTTPS origin separated by a comma.
 4. On Render, the supplied blueprint sets `TRUST_PROXY=1`; verify your host's proxy behavior before using that on another provider.
 5. Configure a TURN provider or your own coturn server. For coturn, set `TURN_URLS` (comma-separated `turn:`/`turns:` URLs) and `TURN_SECRET` to match its shared secret. Support TCP/TLS in addition to UDP for restrictive networks. Keep the secret server-side; Xparty generates temporary credentials for room participants.
-6. Optionally set `YOUTUBE_API_KEY` with YouTube Data API v3 enabled. The key is used only server-side. Search is rate-limited; links work without a search key.
+6. Optionally set `YOUTUBE_API_KEY` with YouTube Data API v3 enabled. The key is used only server-side. Without it the server parses public YouTube search results, which can break or be blocked; configure the official API for supported search. Search is rate-limited.
 7. Visit `https://YOUR-BACKEND/health`; it should return `{"ok":true,"service":"Xparty"}`.
 8. Put the backend HTTPS URL into `public/xparty/config.js`:
 
@@ -79,7 +79,7 @@ Use headphones. Test Phone A on mobile data and Device B on a different Wi-Fi co
 
 1. Create a two-person room on A. Open the portal separately on B and type the code. Confirm a wrong code and locked room cannot join.
 2. Send a message each way. Neither should appear in another room.
-3. Enable both microphones and cameras. Confirm audible voices both ways and visible moving video; do not rely only on the connection label.
+3. Request guest camera access, approve it as host, then enable both microphones and cameras. Confirm audible voices both ways and visible moving video; do not rely only on the connection label.
 4. Play an embeddable YouTube video for ten minutes. Pause and seek from both devices. Record observed drift, buffering and any repeated unexpected seeks.
 5. Turn movie volume down with conversation unchanged; then reverse. Check mobile YouTube volume behavior explicitly.
 6. In portrait and landscape, use cinema view. Confirm the film and call video remain visible simultaneously.

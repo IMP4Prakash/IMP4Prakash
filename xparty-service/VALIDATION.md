@@ -1,3 +1,20 @@
+# Revision 0.2 validation — 2026-09-28
+
+Passed locally:
+- Real WebSocket flows: room isolation, invalid origins, source permissions, resume, camera approval, forced mute, queue/votes, host transfer, kick and revoked-token rejection.
+- Authenticated file chunk upload and downloaded-byte integrity.
+- Two Chromium contexts at desktop and 390px mobile sizes: actual WebRTC with synthetic camera/audio, chat, host-only file selection, HTTPS transfer, shared playback/pause, refresh restoring room/chat/file, room lock, theatre with film/calls/chat, browsing while playing, no horizontal overflow or unhandled JavaScript errors.
+- Local file players differed by 0.008 seconds in the measured run (same machine, not a cross-network claim).
+- Simulated YouTube IFrame API contract: shared play/pause/seek and independent volume. Injected two-second drift corrected to approximately 0.098 seconds within two seconds. This is not real YouTube streaming validation.
+- Public YouTube search returned real results for "lofi music" from the development runtime.
+
+Still required: real phone/tablet/desktop playback across separate networks, actual YouTube streaming/ads/buffering, sustained playback, physical mobile codec/autoplay behavior, TURN relay coverage. User reported the previous live version's chat and mic/video working, but video sync failing; that does not validate this revision.
+
+Room refresh survives while the service process remains alive. Render restart/deploy clears in-memory rooms. No automatic application expiry timer remains.
+
+---
+Historical first-build record follows; superseded behavior is described above.
+
 # Xparty build validation — 28 September 2026
 
 ## Passed in this environment

@@ -7,4 +7,4 @@ export function youtubeId(input) {
   }catch{return null;}
 }
 export function targetPosition(playback,serverNow){return Math.max(0,playback.position+(playback.playing?Math.max(0,serverNow-playback.updatedAt)/1000:0));}
-export function correction(drift,explicit,msSinceCorrection){if(explicit&&Math.abs(drift)>.15)return 'seek';if(Math.abs(drift)>2.5&&msSinceCorrection>8000)return 'seek';if(Math.abs(drift)>.25)return 'rate';return 'none';}
+export function correction(drift,explicit,msSinceCorrection){if(explicit&&Math.abs(drift)>.15)return 'seek';if(Math.abs(drift)>.65&&msSinceCorrection>1500)return 'seek';if(Math.abs(drift)>.25)return 'rate';return 'none';}

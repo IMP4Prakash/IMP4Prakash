@@ -1,13 +1,13 @@
-# Xparty deployment staging
+# Xparty live prototype
 
-This branch prepares the portal and room service; it is not a completed deployment.
+Live URL: https://pkx404-xparty.onrender.com (old /xparty/ links also work).
 
-Render: connect this repository, select branch `xparty/first-build-20260928`, root directory `xparty-service`, Node runtime, build `npm ci --omit=dev`, start `node server.mjs`, free instance, health path `/health`.
+Render service srv-dasunt59fdbs73f6rg80 deploys branch xparty/first-build-20260928. Auto-deploy is disabled; trigger a deploy after updating the branch. Build: `npm ci --omit=dev --prefix xparty-service`; start: `node xparty-service/server.mjs`.
 
-Set ALLOWED_ORIGINS to `https://pkx404.github.io`. Add the backend HTTPS origin if using its hosted frontend for testing. Use TRUST_PROXY=1 only with Render's trusted proxy.
+GitHub Pages integration is still staged in draft PR #1. Keep xparty/ frontend files synchronized with xparty-service/public/xparty/, preserving their different config.js backend settings.
 
-After deployment, put the backend HTTPS URL into `xparty/config.js` before merging the portal to main. Configure a TURN relay via TURN_URLS and TURN_SECRET, and optionally YOUTUBE_API_KEY. Never commit secret values.
+No application room expiry. Rooms, credentials, votes and chat are in memory: Render restarts/deployments still clear them. A persistent datastore is required for restart-proof rooms. Uploaded videos use ephemeral server storage, capped at 250 MB each and 1 GB total; authenticated members download them automatically. No paid resources have been provisioned.
 
-The free backend can sleep; expect slow initial joins and prototype-grade availability. Rooms are in memory and end on restart. No database or paid hosting resources are created by this branch.
+TURN is not configured, so some network combinations can still prevent calls. In-app search uses public YouTube results unless YOUTUBE_API_KEY is configured; public results are an unsupported fallback and may be blocked. Never commit keys.
 
-Current validation: see xparty-service/VALIDATION.md. GitHub staging has now been completed; older validation notes describing missing GitHub access refer to the earlier build session. Physical device testing, actual YouTube streaming, Render deployment and TURN validation remain pending.
+See xparty-service/VALIDATION.md for current test evidence and physical-device checks still needed.
