@@ -37,11 +37,27 @@ test('room access, sync, signaling, readiness, resume and end-to-end cleanup',as
   await a.next('state',m=>m.room.people.length===1);
   a.send('lock',{locked:true});await a.next('state',m=>m.room.locked);
   const newcomer=await client(port);newcomer.send('join',{code:aw.room.code});assert.match((await newcomer.next('error')).message,/unavailable/);
-  a.send('leave');await new Promise(r=>setTimeout(r,60));assert.equal(app.rooms.has(aw.room.code),false);
+  a.send('end-room');await new Promise(r=>setTimeout(r,60));assert.equal(app.rooms.has(aw.room.code),false);
  }finally{await app.close();}
 });
 test('video link validation and synchronization avoids small-drift seeks',()=>{
  assert.equal(youtubeId('https://youtu.be/dQw4w9WgXcQ?t=2'),'dQw4w9WgXcQ');assert.equal(youtubeId('https://www.youtube.com/watch?v=dQw4w9WgXcQ'),'dQw4w9WgXcQ');assert.equal(youtubeId('https://evil.example/watch?v=dQw4w9WgXcQ'),null);
  assert.equal(targetPosition({position:10,playing:true,updatedAt:1000},3500),12.5);assert.equal(targetPosition({position:10,playing:false,updatedAt:1000},3500),10);
  assert.equal(correction(.1,false,99999),'none');assert.equal(correction(.6,false,99999),'rate');assert.equal(correction(3,false,1000),'rate');assert.equal(correction(2,false,2000),'seek');assert.equal(correction(20,true,0),'seek');
+});
+test('ten-person capacity, four call seats, private delivery, typing, and owner return',async()=>{
+ const app=createXparty();await new Promise(r=>app.server.listen(0,'127.0.0.1',r));const port=app.server.address().port;
+ try{
+ const host=await client(port);host.send('create',{name:'Owner',capacity:2});const hw=await host.next('welcome');host.send('capacity',{capacity:10});await host.next('state',m=>m.room.capacity===10);
+ const guests=[];for(let i=0;i<9;i++){const c=await client(port);c.send('join',{code:hw.room.code,name:'Guest '+i});const w=await c.next('welcome');guests.push({c,w});}const r=app.rooms.get(hw.room.code);assert.equal(r.people.size,10);assert.equal([...r.people.values()].filter(p=>p.inCall).length,4);
+ const extra=await client(port);extra.send('join',{code:hw.room.code});assert.match((await extra.next('error')).message,/full/);
+ const a=guests[0],b=guests[1],watcher=guests[8];watcher.c.send('call-join');assert.match((await watcher.c.next('error')).message,/four/);watcher.c.send('media',{mic:true,camera:true});await host.next('state',m=>m.room.people.some(p=>p.id===watcher.w.id&&!p.mic&&!p.camera));
+ a.c.send('chat',{to:b.w.id,text:'Private secret'});assert.equal((await b.c.next('chat')).text,'Private secret');await a.c.next('chat');await new Promise(r=>setTimeout(r,80));assert.equal(host.queue.some(m=>m.type==='chat'),false);assert.equal(watcher.c.queue.some(m=>m.type==='chat'),false);
+ a.c.send('typing',{to:b.w.id,active:true});assert.equal((await b.c.next('typing')).from,a.w.id);assert.equal(host.queue.some(m=>m.type==='typing'),false);
+ const restored=await client(port);restored.send('resume',{token:watcher.w.token});const rw=await restored.next('welcome');assert.equal(rw.history.some(m=>m.text==='Private secret'),false);
+ const restoredB=await client(port);restoredB.send('resume',{token:b.w.token});assert.equal((await restoredB.next('welcome')).history.some(m=>m.text==='Private secret'),true);
+ host.send('leave');await a.c.next('state',m=>m.room.hostId===a.w.id);assert.ok(app.rooms.has(hw.room.code));
+ const returned=await client(port);returned.send('resume',{token:hw.token});assert.equal((await returned.next('welcome')).room.hostId,hw.id);
+ returned.send('end-room');await a.c.next('ended');await restoredB.next('ended');assert.equal(app.rooms.has(hw.room.code),false);
+ }finally{await app.close();}
 });

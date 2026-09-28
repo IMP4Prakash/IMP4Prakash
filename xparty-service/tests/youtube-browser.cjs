@@ -11,6 +11,7 @@ const assert=require('node:assert/strict');
   await a.fill('#youtube-input','https://youtu.be/dQw4w9WgXcQ');await a.click('#load-video');await a.getByRole('button',{name:'Play now',exact:true}).click();await b.waitForFunction(()=>window.fakeYT?.id==='dQw4w9WgXcQ');
   await a.click('#play');await b.waitForFunction(()=>window.fakeYT?.state===1);
   await a.waitForFunction(()=>window.fakeYT.position>3);await b.evaluate(()=>{fakeYT.position-=2;});await b.waitForTimeout(2000);const times=await Promise.all([a,b].map(p=>p.evaluate(()=>fakeYT.position)));assert.ok(Math.abs(times[0]-times[1])<.4,JSON.stringify(times));console.log('PASS: Injected 2-second YouTube drift corrected; remaining difference='+Math.abs(times[0]-times[1]).toFixed(3)+'s');
+  const before=await b.evaluate(()=>{fakeYT.state=3;fakeYT.options.events.onStateChange({data:3});return fakeYT.seeks;});await b.waitForTimeout(2500);assert.equal(await b.evaluate(()=>fakeYT.seeks),before,'Automatic seeks must not restart buffering');await b.evaluate(()=>{fakeYT.state=1;fakeYT.options.events.onStateChange({data:1});});await b.waitForTimeout(2500);console.log('PASS: No seek loop while buffering; playback recovers afterward');
   await b.click('#forward10');await a.waitForFunction(()=>window.fakeYT?.position>9);
   await b.click('#play');await a.waitForFunction(()=>window.fakeYT?.state===2);
   await a.locator('#movie-volume').fill('25');assert.equal(await a.evaluate(()=>fakeYT.volume),25);assert.equal(await b.evaluate(()=>fakeYT.volume),70);

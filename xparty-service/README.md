@@ -5,7 +5,7 @@ A first working implementation for `/xparty/` on `pkx404.github.io`, with a sepa
 ## Included
 
 - Eight-character, randomly generated room codes; no email, account or Google login for participants.
-- Two-person rooms by default. Optional four-person mesh rooms are a beta feature.
+- Two-person rooms by default. Hosts can expand rooms to 10 members at any time. Four members can occupy voice/video call seats; all members can watch and chat.
 - Host-only source selection, shared play/pause/seek, a shared server clock and threshold-based drift correction.
 - YouTube embedded playback; in-app public search, with the official Data API supported via a server-side key.
 - Room-scoped text chat, camera and microphone controls, real connection indicators.
@@ -20,10 +20,10 @@ A first working implementation for `/xparty/` on `pkx404.github.io`, with a sepa
 - **Real phone/tablet/desktop tests over separate networks remain a deployment acceptance step.** Headless browser tests are not equivalent.
 - **Local video maximum: 250 MB.** Each guest receives the entire file in browser memory before playback. This is a transfer-first implementation, not progressive streaming of multi-GB movies. Each recipient necessarily receives a copy of the media. Keep the host tab open until upload completes. Once uploaded, refresh downloads the same file again.
 - **TURN is needed for reliable network coverage.** Default STUN supports direct connections where possible. Without TURN, some Wi-Fi/mobile combinations fail. A Node web service does not replace a TURN service.
-- Calls use a peer mesh, capped at four. Four-person rooms require more upload bandwidth and have not been certified on low-end phones.
+- Calls use a peer mesh capped at four active call seats. Settings include browser noise suppression, echo cancellation and a lower-bandwidth video mode. Ten-person physical-device rooms have not been certified.
 - Rooms and chat have no database. Restarting/deploying the backend ends all rooms. The last 100 messages are held in room memory and restored on refresh.
 - Keep one backend instance: in-memory rooms do not work across uncoordinated replicas.
-- Leaving transfers host ownership to another participant. Disconnected participants keep their slots until they leave, are removed, or the room ends. Session credentials are retained in sessionStorage for same-tab refresh; a new tab/device needs a new join.
+- When the owner exits or disconnects, an online member becomes temporary host. The owner keeps a reserved slot and regains control on same-tab return using the saved credential. Explicit host transfer changes ownership; End room removes everyone. Disconnected participants keep room membership but release call seats. Guests release membership by leaving; hosts can remove disconnected guests. Session credentials are retained in sessionStorage for same-tab refresh; a new tab/device needs a new join.
 - Browser autoplay restrictions can require tapping Play or Enable sound. Background/screen-lock operation is not promised.
 - YouTube availability, ads, embedding permissions, browser restrictions and buffering may prevent exact frame synchronization. The app does not bypass these restrictions.
 - Code-only entry is possession-based privacy. Anyone given the code can join while unlocked. There is no email verification or claim of end-to-end encrypted text chat. Use TLS in production. WebRTC encrypts media in transit; peer IP addresses may be exposed by direct connections.
@@ -86,7 +86,7 @@ Use headphones. Test Phone A on mobile data and Device B on a different Wi-Fi co
 7. Select a small MP4 or WebM **only on A**. Wait for transfer completion on both. Play, pause and seek from B. Repeat while calls are active. Check codec support on each device.
 8. Test a brief network drop, denied camera permission, leaving the room, and a code shared after the host leaves.
 9. Test a forced TURN-only session in a controlled build to verify relay credentials and firewall configuration. This has not been validated by this package's local test environment.
-10. Only after the two-device workflow passes, try four-person rooms and record bandwidth/battery effects.
+10. After the two-device workflow passes, test ten room members with four call seats and record bandwidth/battery effects.
 
 ## Tests
 
@@ -99,3 +99,11 @@ ffmpeg -y -f lavfi -i testsrc2=size=640x360:rate=24 -f lavfi -i sine=frequency=2
 ```
 
 Install Playwright and Chromium for your environment, run the server, then run the test. See `VALIDATION.md` for the actual results from this build. Never equate local synthetic-device tests with physical devices on separate networks.
+
+## Revision 0.3 interface
+
+Theatre starts with the movie only. Separate Video call and Chat toggles reveal nonoverlapping panels; hiding them does not disconnect calls. Hidden incoming chat has a numbered green badge. Type @ and choose a participant to send a private message; delivery and refreshed history are filtered server-side. Typing indicators follow the same recipient scope.
+
+Home, Settings and About are text-labeled navigation buttons. Settings persist locally: four dark themes, English/Hindi/Kannada interface controls and help, native browser noise suppression/echo cancellation, call quality and independent movie/call volume. Dynamic technical errors and user content may remain in their original language. Browser processing is not a claim of Microsoft Teams-equivalent noise cancellation.
+
+YouTube automatic drift corrections are deferred while the player is buffering and briefly after it resumes. Explicit playback commands remain immediate. This avoids a seek/rebuffer loop without changing the shared server timeline. YouTube/network buffering itself is outside the app’s control.

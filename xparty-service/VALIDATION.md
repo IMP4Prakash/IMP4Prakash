@@ -1,3 +1,16 @@
+# Revision 0.3 validation — 2026-09-28
+
+Passed:
+- Server tests: ten members, four call seats, media/signal permissions, private message delivery and refresh-history isolation, scoped typing, automatic temporary-host handoff, owner return, end-room cleanup. Existing room, upload, moderation and sync tests still pass.
+- Chromium UI: dimmed Create entry, @ recipient selection, typing indicator clears, three-message unread badge, theatre toggles preserve microphone, no overlapping movie/call/chat panels or horizontal overflow at 390×844, 844×390 and 1366×900. Language/theme settings persist. Owner exit/return and end room complete correctly. No unhandled JavaScript errors.
+- Existing real WebRTC test with synthetic audio/video and shared local video still passes, with 0.008s measured local file drift in this run.
+- Simulated YouTube API test: injected 2s drift corrected to ~0.079s. Buffering test confirms automatic corrections do not issue repeated seeks during buffering, then resume afterward.
+
+Limits: headless tests run on one machine. Real multi-network YouTube buffering, physical mobile playback, ten-device load and audio noise-reduction quality are not verified. Rooms remain in memory across refresh but not server restart. Native browser audio processing is not Teams' engine.
+
+---
+Previous revision evidence:
+
 # Revision 0.2 validation — 2026-09-28
 
 Passed locally:
