@@ -103,7 +103,7 @@ export function createXparty(options={}) {
     p.inCall=[...r.people.values()].filter(x=>x!==p&&online(x)&&x.inCall).length<4;if(r.ownerId===p.id){r.hostId=p.id;p.cameraAllowed=true;p.micBlocked=false;}p.session=(p.session||0)+1;p.ws=ws;ws.person=p;clearTimeout(timeout);welcome(p,r);state(r);return;
    }
    const p=ws.person,r=p&&rooms.get(p.code);if(!r||r.people.get(p.id)!==p||p.ws!==ws)return;const host=p.id===r.hostId;
-   if(m.type==='leave'){if(r.ownerId!==p.id){remove(p);ws.person=null;}return ws.close(1000,'Left');}
+   if(m.type==='leave'){if(r.ownerId!==p.id){remove(p);}else{p.ws=null;p.inCall=false;p.mic=false;p.camera=false;p.ready=false;if(r.hostId===p.id){const next=[...r.people.values()].find(x=>x!==p&&online(x));if(next){r.hostId=next.id;next.cameraAllowed=true;next.micBlocked=false;}}state(r);}ws.person=null;return ws.close(1000,'Left');}
    if(m.type==='end-room'&&host){for(const x of r.people.values()){clients.delete(x.token);send(x.ws,{type:'ended',message:'The host ended the room.'});x.ws?.close(1000,'Ended');}if(r.source?.type==='file')dropFile(r.source.id);rooms.delete(r.code);persist();return;}
    if(m.type==='kick'&&host){const target=r.people.get(m.target);if(target&&target!==p&&target.id!==r.ownerId){send(target.ws,{type:'kicked',message:'The host removed you from the room.'});remove(target,true);target.ws?.close(4003,'Removed');}return;}
    if(m.type==='transfer-host'&&host){const target=r.people.get(m.target);if(target&&target!==p&&online(target)){r.hostId=target.id;r.ownerId=target.id;target.cameraAllowed=true;target.micBlocked=false;state(r);}return;}
