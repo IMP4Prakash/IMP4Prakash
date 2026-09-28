@@ -1,0 +1,18 @@
+{
+  "name": "xparty",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Code-only private watch rooms for PKX404",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test tests/server.test.mjs",
+    "check": "node --check server.mjs && node --check public/xparty/app.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "ws": "8.22.0"
+  }
+}
