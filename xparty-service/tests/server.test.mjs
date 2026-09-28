@@ -61,3 +61,12 @@ test('ten-person capacity, four call seats, private delivery, typing, and owner 
  returned.send('end-room');await a.c.next('ended');await restoredB.next('ended');assert.equal(app.rooms.has(hw.room.code),false);
  }finally{await app.close();}
 });
+
+test('expanding a locked live room admits newcomers; shared clock holds during buffering',async()=>{
+ const app=createXparty();await new Promise(r=>app.server.listen(0,'127.0.0.1',r));const port=app.server.address().port;
+ try{const a=await client(port);a.send('create',{capacity:2});const aw=await a.next('welcome');const b=await client(port);b.send('join',{code:aw.room.code});const bw=await b.next('welcome');a.send('lock',{locked:true});await a.next('state',m=>m.room.locked);a.send('capacity',{capacity:4});await a.next('state',m=>m.room.capacity===4&&!m.room.locked);const c=await client(port);c.send('join',{code:aw.room.code});await c.next('welcome');
+ a.send('source',{source:{type:'youtube',videoId:'dQw4w9WgXcQ'}});const source=(await b.next('state',m=>m.room.source?.type==='youtube')).room.source;a.send('playback',{sourceId:source.id,position:10,playing:true});await b.next('playback');b.send('buffering',{sourceId:source.id,buffering:true});const held=await a.next('playback',m=>m.playback.waitingFor?.length);assert.equal(held.playback.waitingFor[0],bw.id);assert.equal(targetPosition(held.playback,Date.now()+5000),held.playback.position);
+ b.send('buffering',{sourceId:source.id,buffering:false});const resumed=await a.next('playback',m=>m.playback.waitingFor?.length===0);assert.ok(targetPosition(resumed.playback,resumed.playback.updatedAt+2000)>resumed.playback.position+1.9);
+ a.send('end-room');await c.next('ended');
+ }finally{await app.close();}
+});

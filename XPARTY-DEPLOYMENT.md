@@ -11,3 +11,10 @@ No application room expiry. Rooms, credentials, votes and chat are in memory: Re
 TURN is not configured, so some network combinations can still prevent calls. In-app search uses public YouTube results unless YOUTUBE_API_KEY is configured; public results are an unsupported fallback and may be blocked. Never commit keys.
 
 See xparty-service/VALIDATION.md for current test evidence and physical-device checks still needed.
+
+
+## Frontend split (revision 0.4)
+
+Render static frontend `srv-dat8thk9v7es73b03980` serves the repository's `xparty/` directory, same feature branch, auto-deploy off. URL assigned by Render: https://xparty-wsev.onrender.com . Requested exact xparty.onrender.com was not assigned. Backend `ALLOWED_ORIGINS` now includes this alternate frontend and both previous origins. Deploy both services after frontend changes. Static build: `test -f xparty/index.html`; publish: `xparty`; no dependency install.
+
+Optional account setup is in xparty-service/accounts/SETUP.md. No Supabase/SMS/Google credentials were available or configured by this revision.

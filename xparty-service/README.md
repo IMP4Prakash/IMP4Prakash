@@ -107,3 +107,12 @@ Theatre starts with the movie only. Separate Video call and Chat toggles reveal 
 Home, Settings and About are text-labeled navigation buttons. Settings persist locally: four dark themes, English/Hindi/Kannada interface controls and help, native browser noise suppression/echo cancellation, call quality and independent movie/call volume. Dynamic technical errors and user content may remain in their original language. Browser processing is not a claim of Microsoft Teams-equivalent noise cancellation.
 
 YouTube automatic drift corrections are deferred while the player is buffering and briefly after it resumes. Explicit playback commands remain immediate. This avoids a seek/rebuffer loop without changing the shared server timeline. YouTube/network buffering itself is outside the app’s control.
+
+## Revision 0.4
+
+- Native YouTube controls are disabled and native player events no longer send playback commands. Only explicit app controls update the shared timeline. Sustained buffering is reported to the server; the room holds its shared clock until the buffering device resumes. This avoids one device continually advancing while another is stuck. It cannot remove YouTube/network stalls or guarantee frame-exact synchronization.
+- Increasing capacity unlocks the live room for new guests. Admission counts connected members plus the reserved owner, instead of every stale disconnected identity. A disconnected guest whose seat has since been filled needs the host to expand capacity before rejoining.
+- Compact toolbar, hover/tap Control menu, separate room settings for capacity/shared theme, icon playback controls, adaptive call tiles and local mic/camera controls. The camera menu can switch front/rear where supported. Movie panel resizes with a pointer/touch divider or keyboard arrows. Mobile theatre shows call and chat together by default and lets each be toggled.
+- Made4Love · Inspired by Love Aanchal, with a PKX404 website link.
+- Account/friends/Google integration is prepared but disabled until provider configuration exists. See accounts/SETUP.md and schema.sql. No real OTP, Google account, database isolation or direct account-call test has been completed. No SMS service or database has been provisioned.
+- Additional frontend: https://xparty-wsev.onrender.com . Render assigned a suffix rather than the requested exact xparty.onrender.com. Both frontends use the existing pkx404-xparty room backend.

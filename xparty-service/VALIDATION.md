@@ -1,3 +1,16 @@
+# Revision 0.4 validation — 2026-09-28
+
+Passed locally:
+- Four server test groups, including a locked 2-person room expanded live to 4 admitting another guest, and a held/resumed shared clock during buffering.
+- Desktop/mobile browser flows: real WebRTC with synthetic camera/microphone, camera capture replacement through the camera menu, chat, guest-only file download, shared file play/pause, refresh recovery, room controls, themes and language settings. Local file drift measured 0.007–0.011s in two same-machine runs.
+- Portrait, landscape and desktop theatre: call/chat visible together, no panel overlaps or horizontal overflow; unread badge and hidden-panel call preservation. Keyboard movie resizing and honest disabled account state passed.
+- Simulated YouTube IFrame API: injected 2s drift recovery, no automatic seek loop during buffering, explicit play/pause/seek and native-event feedback prevention. This is not actual YouTube streaming validation.
+
+Not verified: real cross-network sustained YouTube playback/buffering, actual rear camera selection on physical phones, OTP delivery, OAuth permissions, SQL/RLS behavior against a live Supabase project, Google library access, or direct account calls. Account features are disabled absent provider configuration. Exact xparty.onrender.com was not assigned by Render; the alternate frontend received xparty-wsev.onrender.com.
+
+---
+Earlier test records:
+
 # Revision 0.3 validation — 2026-09-28
 
 Passed:

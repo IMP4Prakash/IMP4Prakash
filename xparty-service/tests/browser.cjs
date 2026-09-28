@@ -25,6 +25,7 @@ await a.waitForFunction(()=>[...document.querySelectorAll('.participant video')]
 await b.waitForFunction(()=>[...document.querySelectorAll('.participant video')].every(v=>v.videoWidth>0));
 for(const page of [a,b])await page.waitForFunction(async()=>{const stats=await Promise.all(window.__pcs.map(p=>p.getStats()));return stats.some(report=>[...report.values()].some(s=>s.type==='inbound-rtp'&&s.kind==='audio'&&s.bytesReceived>0));});
 console.log('PASS: Bidirectional decoded synthetic video and received audio packets');
+await a.click('#camera');await a.waitForSelector('#camera-menu:not([hidden])');await a.click('#camera-flip');await a.waitForFunction(()=>document.querySelector('#camera').getAttribute('aria-pressed')==='true');await a.waitForFunction(()=>document.querySelector('.participant video').videoWidth>0);console.log('PASS: Camera menu switches capture while preserving active call');
 await a.click('#file-tab');await a.setInputFiles('#file-input',process.env.XPARTY_TEST_VIDEO||require('node:path').join(__dirname,'sample.webm'));
 await b.waitForFunction(()=>document.querySelector('#file-player').readyState>=2,{timeout:30000});
 await a.waitForFunction(()=>document.querySelector('#transfer-label').textContent.includes('Everyone'));
@@ -36,11 +37,11 @@ await b.click('#play');await a.waitForFunction(()=>document.querySelector('#file
 await b.reload();await b.waitForSelector('#room:not([hidden])');await b.waitForFunction(()=>document.querySelector('#file-player').readyState>=2);await b.getByText('Ready for movie night?',{exact:true}).waitFor();console.log('PASS: Refresh restores room, chat and local file');
 await a.screenshot({path:'../Xparty-desktop-room.png',fullPage:true});await b.screenshot({path:'../Xparty-mobile-room.png',fullPage:true});
 assert.equal(await b.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
-await b.click('#theater');assert.equal(await b.locator('.call-panel').isVisible(),false);assert.equal(await b.locator('.chat-panel').isVisible(),false);await b.click('#toggle-vc');await b.click('#toggle-chat');await b.screenshot({path:'../Xparty-mobile-cinema.png',fullPage:true});
+await b.click('#theater');assert.equal(await b.locator('.call-panel').isVisible(),true);assert.equal(await b.locator('.chat-panel').isVisible(),true);await b.screenshot({path:'../Xparty-mobile-cinema.png',fullPage:true});
 assert.equal(await b.locator('#watch-stage').isVisible(),true);assert.equal(await b.locator('.call-panel').isVisible(),true);assert.equal(await b.locator('.chat-panel').isVisible(),true);await b.click('#browse');assert.equal(await b.locator('#youtube-form').isVisible(),true);await b.click('#back-video');
 console.log('PASS: 390px mobile layout has no horizontal overflow; cinema keeps film and calls visible');
-await b.click('#exit-theatre');await b.locator('#room-menu>summary').click();await b.click('#leave');await a.waitForFunction(()=>document.querySelector('#people-count').textContent==='1/2');
-await a.locator('#room-menu>summary').click();await a.click('#lock');await a.waitForFunction(()=>document.querySelector('#lock').textContent==='Unlock room');
+await b.click('#exit-theatre');await b.locator('#room-menu>summary').hover();await b.click('#leave');await a.waitForFunction(()=>document.querySelector('#people-count').textContent==='1/2');
+await a.locator('#room-menu>summary').hover();await a.click('#lock');await a.waitForFunction(()=>document.querySelector('#lock').textContent==='Unlock room');
 await b.fill('#code',code);await b.locator('#join-form button').click();await b.getByText('Room unavailable. Check the code or ask the host to unlock it.').waitFor();
 console.log('PASS: Room lock rejects new joins');
 console.log('BROWSER_ERRORS',errors);assert.deepEqual(errors,[]);console.log('PASS: No unhandled browser JavaScript errors');
