@@ -83,3 +83,15 @@ Room/call screenshots with color bars and green moving images show generated tes
 - TURN configuration: https://webrtc.org/getting-started/turn-server
 - Browser media volume: https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/volume
 - Node deployment example: https://render.com/docs/deploy-node-express-app
+
+
+## Revision 0.5 — 2026-09-28
+- Core timing functions (`command`, `applyPlayback`, `tick`, player setup, and sync.js) compared byte-for-byte with 0.4 and unchanged. Only end-of-media queue behavior adds the requested autoplay option.
+- Five server test groups passed, including seven-character code status, capacity admission, host theme delegation, autoplay permissions and private read receipt isolation.
+- Two independent browser contexts established real WebRTC connections using synthetic media. Mic off stopped/detached outgoing tracks, the remote audio element muted, speaker toggling stayed local, one output existed per peer, and front/rear capture replacement preserved the call.
+- Host-only file playback and guest pause passed; observed same-machine drift 0.011 seconds. Refresh restored room, chat and file.
+- Simulated YouTube regression passed: induced two-second drift corrected to 0.040 seconds; no buffering seek loop; native events did not overwrite shared playback. This is not a real YouTube/network benchmark.
+- UI tests passed at 320px, 390px, 844px and 1366px with three theatre layouts; no horizontal overflow, toolbar/playback controls remained inside viewport, code remained visible. Message count/read indicators, settings Save, theme permissions, and nickname join passed without unhandled errors.
+- Physical-device echo/distortion, account OTP delivery, database RLS/deletion, and provider authentication are not live-validated. Accounts remain disabled until Supabase and email/SMS/Google configuration is complete.
+- Vimeo, Dailymotion, SoundCloud, Netflix and Prime are not supported by this release. They are not advertised as functioning players. Additional official player adapters need separate synchronization validation; Netflix/Prime require a different authorized integration approach.
+- Exact xparty.onrender.com remains unassigned; dashboard access requires sign-in. Existing URLs retained, no new randomly suffixed hostname created.

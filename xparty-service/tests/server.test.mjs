@@ -10,7 +10,7 @@ test('room access, sync, signaling, readiness, resume and end-to-end cleanup',as
  try{
   const health=await fetch(`http://127.0.0.1:${port}/health`);assert.equal(health.status,200);
   await new Promise(resolve=>{const bad=new WebSocket(`ws://127.0.0.1:${port}/ws`,{origin:'https://evil.example'});bad.on('error',()=>resolve());bad.on('open',()=>assert.fail('Foreign origin accepted'));});
-  const a=await client(port);a.send('create',{name:'Host',capacity:2});const aw=await a.next('welcome');assert.match(aw.room.code,/^[A-Z2-9]{8}$/);
+  const a=await client(port);a.send('create',{name:'Host',capacity:2});const aw=await a.next('welcome');assert.match(aw.room.code,/^[A-Z2-9]{7}$/);
   const b=await client(port);b.send('join',{code:'ZZZZZZZZ'});assert.match((await b.next('error')).message,/unavailable/);b.send('join',{code:aw.room.code,name:'Guest'});const bw=await b.next('welcome');assert.equal(bw.room.people.length,2);
   const third=await client(port);third.send('join',{code:aw.room.code});assert.match((await third.next('error')).message,/full/);
   third.send('create',{capacity:4});const tw=await third.next('welcome');assert.equal(tw.room.capacity,4);
@@ -68,5 +68,14 @@ test('expanding a locked live room admits newcomers; shared clock holds during b
  a.send('source',{source:{type:'youtube',videoId:'dQw4w9WgXcQ'}});const source=(await b.next('state',m=>m.room.source?.type==='youtube')).room.source;a.send('playback',{sourceId:source.id,position:10,playing:true});await b.next('playback');b.send('buffering',{sourceId:source.id,buffering:true});const held=await a.next('playback',m=>m.playback.waitingFor?.length);assert.equal(held.playback.waitingFor[0],bw.id);assert.equal(targetPosition(held.playback,Date.now()+5000),held.playback.position);
  b.send('buffering',{sourceId:source.id,buffering:false});const resumed=await a.next('playback',m=>m.playback.waitingFor?.length===0);assert.ok(targetPosition(resumed.playback,resumed.playback.updatedAt+2000)>resumed.playback.position+1.9);
  a.send('end-room');await c.next('ended');
+ }finally{await app.close();}
+});
+
+test('availability checks, theme delegation, autoplay and private read receipts',async()=>{
+ const app=createXparty();await new Promise(r=>app.server.listen(0,'127.0.0.1',r));const port=app.server.address().port;
+ try{const a=await client(port);a.send('create',{capacity:4});const aw=await a.next('welcome');const b=await client(port),c=await client(port);b.send('join',{code:aw.room.code});const bw=await b.next('welcome');c.send('join',{code:aw.room.code});await c.next('welcome');
+ const lookup=await fetch(`http://127.0.0.1:${port}/api/room-status?code=${aw.room.code}`);assert.equal((await lookup.json()).status,'available');a.send('theme-access',{enabled:true});await b.next('state',m=>m.room.guestThemes);b.send('room-theme',{theme:'ocean'});await a.next('state',m=>m.room.theme==='ocean');a.send('autoplay',{enabled:false});await b.next('state',m=>m.room.autoplay===false);b.send('autoplay',{enabled:true});assert.equal(app.rooms.get(aw.room.code).autoplay,false);
+ a.send('chat',{text:'private',to:bw.id});const message=await b.next('chat');await a.next('chat');c.send('read',{ids:[message.id]});await new Promise(r=>setTimeout(r,40));assert.equal(a.queue.some(m=>m.type==='read'),false);b.send('read',{ids:[message.id]});assert.equal((await a.next('read')).by,bw.id);assert.equal(c.queue.some(m=>m.type==='read'),false);
+ a.send('end-room');await b.next('ended');
  }finally{await app.close();}
 });

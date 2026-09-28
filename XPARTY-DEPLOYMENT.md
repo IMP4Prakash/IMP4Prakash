@@ -18,3 +18,6 @@ See xparty-service/VALIDATION.md for current test evidence and physical-device c
 Render static frontend `srv-dat8thk9v7es73b03980` serves the repository's `xparty/` directory, same feature branch, auto-deploy off. URL assigned by Render: https://xparty-wsev.onrender.com . Requested exact xparty.onrender.com was not assigned. Backend `ALLOWED_ORIGINS` now includes this alternate frontend and both previous origins. Deploy both services after frontend changes. Static build: `test -f xparty/index.html`; publish: `xparty`; no dependency install.
 
 Optional account setup is in xparty-service/accounts/SETUP.md. No Supabase/SMS/Google credentials were available or configured by this revision.
+
+
+Revision 0.5 keeps the proven playback timing intact and updates call audio/UI. New room codes have seven characters; eight-character codes remain accepted. Both frontend copies must deploy together. Rooms held only in memory clear when the backend restarts. No hostname, paid resource, or account provider was changed in this revision.

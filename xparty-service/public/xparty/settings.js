@@ -1,4 +1,4 @@
-const defaults={theme:'lime',language:'en',noise:true,echo:true,quality:'balanced'};
+const defaults={theme:'lime',language:'en',noise:true,echo:true,quality:'balanced',notify_join:false,notify_leave:false,notify_message:true,notify_sent:false,notify_read:false};
 let saved={};try{saved=JSON.parse(localStorage.getItem('xparty-settings')||'{}');}catch{}
 export const preferences={...defaults,...saved};
 const words={

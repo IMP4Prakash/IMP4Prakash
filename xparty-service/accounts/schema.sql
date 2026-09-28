@@ -57,3 +57,25 @@ grant update(status) on public.xparty_calls to authenticated;
 grant usage on sequence public.xparty_signals_id_seq to authenticated;
 -- Schedule cleanup of xparty_signals older than one day in Supabase Cron before production.
 -- OTP abuse limits, CAPTCHA, SMS/email quotas and backups are configured in the auth provider.
+
+-- Revision 0.5 profile fields and self-service account deletion.
+alter table public.xparty_profiles add column if not exists photo_data text
+ check(photo_data is null or (length(photo_data)<100000 and photo_data like 'data:image/jpeg;base64,%'));
+create table if not exists public.xparty_private_profiles (
+ id uuid primary key references auth.users(id) on delete cascade,
+ age integer check(age between 18 and 120)
+);
+alter table public.xparty_private_profiles enable row level security;
+create policy private_profile_owner on public.xparty_private_profiles for all to authenticated
+ using(id=auth.uid()) with check(id=auth.uid());
+grant select,insert,update,delete on public.xparty_private_profiles to authenticated;
+grant update(photo_data) on public.xparty_profiles to authenticated;
+create or replace function public.xparty_delete_my_account() returns void
+ language plpgsql security definer set search_path = '' as $$
+begin
+ if auth.uid() is null then raise exception 'Authentication required'; end if;
+ delete from auth.users where id=auth.uid();
+end;
+$$;
+revoke all on function public.xparty_delete_my_account() from public,anon;
+grant execute on function public.xparty_delete_my_account() to authenticated;
