@@ -32,6 +32,7 @@ export function createPartyControl({online,send,state,execute,now=Date.now,reque
   const controlled=['playback','source','next','previous','queue-play','queue-add','queue-remove','resync'];if(!controlled.includes(m.type))return false;
   if(m.type==='playback'&&(!Number.isFinite(m.position)||m.position<0||m.position>604800||typeof m.playing!=='boolean'||m.sourceId!==r.source?.id))return true;
   // A reconnect snapshot and periodic anchors are recovery traffic, not guest actions.
+  if(!host&&m.type==='playback'&&(m.intent==='stop'||r.mode!=='SHARED_CONTROL')){send(p.ws,{type:'error',message:'Host controls the room timeline. Pause locally and Play to rejoin.'});return true;}
   if(host){if(m.type==='playback'&&r.mode==='SHARED_CONTROL'){r.controller={id:p.id,until:now()+lockMs};state(r);}return false;}
   if(r.mode==='SHARED_CONTROL'&&m.type==='playback'&&Math.abs(m.position-position(r))<=60){if(!r.controller||r.controller.id===p.id){r.controller={id:p.id,until:now()+lockMs};state(r);return false;}send(p.ws,{type:'error',message:'Another participant has control for up to 10 seconds. Request control from the key menu.'});return true;}
   const action={type:m.type};for(const key of ['sourceId','position','playing','intent','source','videoId','title','id'])if(m[key]!==undefined)action[key]=m[key];request(r,p,action);return true;

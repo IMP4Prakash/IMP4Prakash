@@ -107,3 +107,15 @@ Room/call screenshots with color bars and green moving images show generated tes
 - Playback correction, shared buffering recovery and clock rules retained. Permission commands wrap the existing timeline rather than replacing it.
 
 Not validated: physical devices on separate networks, acoustic echo behavior, real provider streaming under network loss, distributed scale or durable recovery across service restarts. TURN and optional account providers remain unconfigured. See docs/PARTY-ARCHITECTURE.md for current versus planned architecture.
+
+## 0.7 — reference homepage, local pause and call comfort (2026-09-29)
+
+The reference homepage now has a blurred essential-storage consent gate, optional preference choice, and unchecked entry agreements for both Create and Join with expandable full text. The mobile wordmark remains visible. Both entry paths accept optional nicknames. The Made4Love dedication has a shadow name without a surrounding card.
+
+In both host-controlled modes guests pause locally; Play catches up to the authoritative host timeline. Stop is host-only, and guest seek controls are hidden/disabled in those modes. Shared Control retains coordinated guest playback. The server rejects unauthorized timeline commands rather than relying on hidden buttons.
+
+Buffer-status messages no longer force a seek simply because their message type is playback. New revisions and explicit resync still apply immediate corrections; ordinary buffering recovery uses the existing drift rules. This fixes an application-level restart trigger, not provider/network congestion. YouTube controls=0 remains configured; provider branding/overlays are not fully removable through the supported API (https://developers.google.com/youtube/player_parameters).
+
+Validation: seven Node tests pass. Interface browser checks cover consent refusal of optional storage, blocked Continue before acknowledgment, full agreement, nicknames, participant-only camera approvals, larger self view, PiP movement/resizing, 320px containment and mobile theatre. Simulated YouTube regression covers drift correction, buffering recovery without a seek loop and native-event suppression. Real WebRTC tests use synthetic devices; local-file drift measured 0.012s, guest pause leaves host playing and Play returns to host time. Physical multi-network and acoustic tests remain pending.
+
+The sofa icon opens theatre with call-first conversation controls. Chat remains a toggle. Focus call offers in-app movie PiP with five-dot drag handle and corner resize; neither operation recreates the player. Requests and approval settings are in the participant popover, which closes on repeat click, outside click or inactivity (editing inputs keeps it open).

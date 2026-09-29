@@ -29,3 +29,7 @@ Includes Host Approval / Host Only / Shared Control, approval policies, 120-seco
 Both existing Render services track `xparty/first-build-20260928` with auto deploy off. Publish backend and static frontend manually after the same commit is pushed. The static site's config continues to point to the existing backend. The exact `xparty.onrender.com` hostname has NOT been assigned; the static service currently has `xparty-wsev.onrender.com`. Do not treat renaming a service label as proof its URL changed, or select another random suffix.
 
 No persistent database, paid plan, TURN server, OTP provider or Kubernetes deployment is provisioned by this release. A backend restart still clears in-memory rooms on the current hosting setup. Do not merge the main-site draft PR without the owner's approval.
+
+### 0.7
+
+Reference-based consent and entry-agreement UI; mobile logo preserved; local guest pause/catch-up in host modes; host-only Stop; no forced seeks on ordinary buffering status; resizable/movable five-dot PiP; sofa theatre icon; larger self-call tile and participant-only approval panel. See VALIDATION.md for test scope. Exact xparty.onrender.com assignment remains pending dashboard authentication; no alternate hostname chosen.

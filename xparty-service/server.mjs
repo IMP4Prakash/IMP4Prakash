@@ -56,7 +56,7 @@ export function createXparty(options={}) {
   res.setHeader('Access-Control-Allow-Headers','Authorization, Content-Type, X-File-Offset');res.setHeader('Access-Control-Allow-Methods','GET, PUT, OPTIONS');res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');
   const json=(status,body)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(body));};
   if(req.method==='OPTIONS'){res.writeHead(originOK(req)?204:403);return res.end();}
-  if(url.pathname==='/health')return json(200,{ok:true,service:'Xparty',version:'0.6.0'});
+  if(url.pathname==='/health')return json(200,{ok:true,service:'Xparty',version:'0.7.0'});
   if(url.pathname==='/api/accounts/config')return json(200,{enabled:!!(process.env.SUPABASE_URL&&publicAuthKey),url:publicAuthKey?process.env.SUPABASE_URL||null:null,publicKey:publicAuthKey,phoneEnabled:process.env.SUPABASE_PHONE_ENABLED==='true'});
   if(url.pathname==='/api/room-status'&&req.method==='GET'){
    if(req.headers.origin&&!originOK(req))return json(403,{error:'Origin not allowed'});
@@ -127,7 +127,7 @@ export function createXparty(options={}) {
    if(m.type==='ready'&&m.sourceId===r.source?.id){p.ready=m.ready===true;p.loadStatus=clean(m.status,100)||(p.ready?'Ready':'Loading');state(r);return;}
    if(m.type==='buffering'&&r.source?.type==='youtube'&&m.sourceId===r.source.id){p.buffering=m.buffering===true&&r.playback.playing;syncBuffering(r);return;}
    if(m.type==='rename'){const name=clean(m.name,24);if(name){p.name=name;state(r);}return;}
-   if(m.type==='resync'){send(ws,{type:'playback',sourceId:r.source?.id,playback:r.playback,serverTime:Date.now()});return true;}
+   if(m.type==='resync'){send(ws,{type:'playback',resync:true,sourceId:r.source?.id,playback:r.playback,serverTime:Date.now()});return true;}
    if(m.type==='playback'&&r.source&&m.sourceId===r.source.id&&finite(m.position)&&typeof m.playing==='boolean'){
     const waiting=[...r.people.values()].filter(x=>online(x)&&!x.ready);
     if(r.source.type==='file'&&m.playing&&(!r.source.uploaded||waiting.length))return send(ws,{type:'error',message:!r.source.uploaded?'The video is uploading. Progress is shown below the player.':'Waiting for '+waiting.map(x=>x.name+' ('+(x.loadStatus||'loading')+')').join(', ')});
@@ -166,4 +166,4 @@ export function createXparty(options={}) {
  const maintenance=setInterval(()=>{for(const ws of wss.clients){if(!ws.alive){ws.terminate();continue;}ws.alive=false;ws.ping();}for(const[key,b]of buckets)if(b.until<Date.now())buckets.delete(key);},30000);maintenance.unref();
  return {server,rooms,close:async()=>{clearInterval(maintenance);clearInterval(recovery);clearTimeout(saveTimer);for(const ws of wss.clients)ws.terminate();await new Promise(r=>wss.close(r));await new Promise(r=>server.close(r));for(const id of files.keys())dropFile(id);}};
 }
-if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){const app=createXparty();app.server.listen(Number(process.env.PORT||8787),'0.0.0.0',()=>console.log('Xparty 0.6 listening on '+(process.env.PORT||8787)));const stop=()=>app.close().then(()=>process.exit(0));process.on('SIGTERM',stop);process.on('SIGINT',stop);}
+if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){const app=createXparty();app.server.listen(Number(process.env.PORT||8787),'0.0.0.0',()=>console.log('Xparty 0.7 listening on '+(process.env.PORT||8787)));const stop=()=>app.close().then(()=>process.exit(0));process.on('SIGTERM',stop);process.on('SIGINT',stop);}

@@ -102,3 +102,7 @@ Redis holds presence TTLs, heartbeat timestamps, short controller leases, rate b
 6. Benchmark realistic clients and network loss: command-to-render latency, drift percentiles, reconnect time, duplicate events, queue expiry, memory and egress. No 1,000-user readiness claim until that workload is measured. Kubernetes is a later operational option, not an installed requirement.
 
 Privacy choices are an in-app essential/optional storage control; no analytics service is installed. This implementation is not a legal compliance certification. Operational retention, provider agreements and jurisdiction-specific notices remain the operator's responsibility.
+
+## 0.7 policy update (supersedes the host-mode playback rows above)
+
+The latest owner instruction changes guest playback in HOST_APPROVAL and HOST_ONLY: Pause is device-local; Play resumes at the authoritative host position. Stop and seeks are host-only in these modes. Shared mode retains its ten-second controller lease, but an explicit Stop command is always host-only. Content/mode requests still use the approval engine. Guest local pause sends no shared playback command. Buffer recovery retains correction thresholds, but ordinary playback-status messages no longer force correction absent a new revision or explicit resync.
