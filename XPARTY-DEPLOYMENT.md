@@ -33,3 +33,7 @@ No persistent database, paid plan, TURN server, OTP provider or Kubernetes deplo
 ### 0.7
 
 Reference-based consent and entry-agreement UI; mobile logo preserved; local guest pause/catch-up in host modes; host-only Stop; no forced seeks on ordinary buffering status; resizable/movable five-dot PiP; sofa theatre icon; larger self-call tile and participant-only approval panel. See VALIDATION.md for test scope. Exact xparty.onrender.com assignment remains pending dashboard authentication; no alternate hostname chosen.
+
+## 0.8 update
+
+The September 29 update adds remembered agreements, reference branding, responsive room controls, approval requests, chat moderation, search suggestions, votes/reactions and movie-priority call PiP. Timing correction remains unchanged. See `xparty-service/VALIDATION.md` for test evidence and `xparty-service/REMAINING-SETUP.md` for the hostname, auth, persistent storage, provider and real-device work that is not yet complete.

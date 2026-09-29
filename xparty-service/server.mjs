@@ -30,7 +30,7 @@ export function createXparty(options={}) {
  function send(ws,obj){if(ws?.readyState===WebSocket.OPEN){if(ws.bufferedAmount>1024*1024)return ws.close(1013,'Slow connection');ws.send(JSON.stringify(obj));}}
  const online=p=>p.ws?.readyState===WebSocket.OPEN;
  function broadcast(r,obj){for(const p of r.people.values())send(p.ws,obj);}
- function snapshot(r){return {code:r.code,hostId:r.hostId,ownerId:r.ownerId||r.hostId,...partyState(r),hostReconnecting:!online(r.people.get(r.hostId)||{}),theme:r.theme||null,guestThemes:!!r.guestThemes,autoplay:r.autoplay!==false,capacity:r.capacity,locked:r.locked,source:r.source,playback:r.playback,queue:r.queue||[],people:[...r.people.values()].map(p=>({id:p.id,name:p.name,session:p.session||0,online:online(p),presence:online(p)?'ACTIVE':p.left?'LEFT':'DISCONNECTED',reservedUntil:p.reservedUntil||null,inCall:!!p.inCall,mic:p.mic,camera:p.camera,ready:p.ready,loadStatus:p.loadStatus||'',micBlocked:p.micBlocked,cameraAllowed:p.cameraAllowed,cameraRequested:p.cameraRequested})),serverTime:Date.now()};}
+ function snapshot(r){return {code:r.code,hostId:r.hostId,ownerId:r.ownerId||r.hostId,...partyState(r),hostReconnecting:!online(r.people.get(r.hostId)||{}),theme:r.theme||null,guestThemes:!!r.guestThemes,autoplay:r.autoplay!==false,capacity:r.capacity,locked:r.locked,source:r.source,playback:r.playback,queue:r.queue||[],people:[...r.people.values()].map(p=>({id:p.id,name:p.name,session:p.session||0,online:online(p),presence:online(p)?'ACTIVE':p.left?'LEFT':'DISCONNECTED',reservedUntil:p.reservedUntil||null,inCall:!!p.inCall,mic:p.mic,camera:p.camera,ready:p.ready,loadStatus:p.loadStatus||'',chatBlocked:!!p.chatBlocked,micBlocked:p.micBlocked,cameraAllowed:p.cameraAllowed,cameraRequested:p.cameraRequested})),serverTime:Date.now()};}
  function state(r){syncBuffering(r);broadcast(r,{type:'state',room:snapshot(r)});persist();}
  function ice(id){const out=[{urls:'stun:stun.l.google.com:19302'}];if(process.env.TURN_URLS&&process.env.TURN_SECRET){const username=`${Math.floor(Date.now()/1000)+86400}:${id}`;out.push({urls:process.env.TURN_URLS.split(','),username,credential:createHmac('sha1',process.env.TURN_SECRET).update(username).digest('base64')});}if(process.env.ICE_SERVERS_JSON)out.push(...JSON.parse(process.env.ICE_SERVERS_JSON));return out;}
  function welcome(p,r){const iceServers=ice(p.id);send(p.ws,{type:'welcome',id:p.id,token:p.token,room:snapshot(r),history:(r.history||[]).filter(m=>!m.to||m.from===p.id||m.to===p.id),iceServers,hasRelay:iceServers.some(s=>[s.urls].flat().some(u=>/^turns?:/.test(u))),searchEnabled:true});}
@@ -56,7 +56,7 @@ export function createXparty(options={}) {
   res.setHeader('Access-Control-Allow-Headers','Authorization, Content-Type, X-File-Offset');res.setHeader('Access-Control-Allow-Methods','GET, PUT, OPTIONS');res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');
   const json=(status,body)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(body));};
   if(req.method==='OPTIONS'){res.writeHead(originOK(req)?204:403);return res.end();}
-  if(url.pathname==='/health')return json(200,{ok:true,service:'Xparty',version:'0.7.0'});
+  if(url.pathname==='/health')return json(200,{ok:true,service:'Xparty',version:'0.8.0'});
   if(url.pathname==='/api/accounts/config')return json(200,{enabled:!!(process.env.SUPABASE_URL&&publicAuthKey),url:publicAuthKey?process.env.SUPABASE_URL||null:null,publicKey:publicAuthKey,phoneEnabled:process.env.SUPABASE_PHONE_ENABLED==='true'});
   if(url.pathname==='/api/room-status'&&req.method==='GET'){
    if(req.headers.origin&&!originOK(req))return json(403,{error:'Origin not allowed'});
@@ -67,7 +67,7 @@ export function createXparty(options={}) {
   if(url.pathname.startsWith('/api/')){
    if(req.headers.origin&&!originOK(req))return json(403,{error:'Origin not allowed'});const p=authenticate(req);if(!p)return json(401,{error:'Your room connection is offline. Reconnect and retry.'});const r=rooms.get(p.code);
    if(url.pathname==='/api/search'&&req.method==='GET'){
-    if(!rate('search:'+p.id,12,60000))return json(429,{error:'Please wait a moment before searching again.'});const q=clean(url.searchParams.get('q'),100);if(q.length<2)return json(400,{error:'Enter at least two characters'});
+    if(!rate('search:'+p.id,30,60000))return json(429,{error:'Please wait a moment before searching again.'});const q=clean(url.searchParams.get('q'),100);if(q.length<2)return json(400,{error:'Enter at least two characters'});
     const cache=searchCache.get(q.toLowerCase());if(cache&&Date.now()-cache.at<300000)return json(200,{items:cache.items});
     try{const items=await (options.searchYouTube||searchYouTube)(q);if(searchCache.size>100)searchCache.clear();searchCache.set(q.toLowerCase(),{at:Date.now(),items});return json(200,{items});}catch(e){return json(503,{error:e.message});}
    }
@@ -102,15 +102,17 @@ export function createXparty(options={}) {
    if(m.type==='kick'&&host){const target=r.people.get(m.target);if(target&&target!==p&&target.id!==r.ownerId){send(target.ws,{type:'kicked',message:'The host removed you from the room.'});remove(target,true);target.ws?.close(4003,'Removed');}return;}
    if(m.type==='transfer-host'&&host){control.cancel(r,'Host changed.');const target=r.people.get(m.target);if(target&&target!==p&&online(target)){r.hostId=target.id;r.ownerId=target.id;target.cameraAllowed=true;target.micBlocked=false;state(r);}return;}
    if(m.type==='moderate'&&host){const target=r.people.get(m.target);if(!target||target===p)return;
-    if(m.action==='mute'){target.micBlocked=true;target.mic=false;}else if(m.action==='allow-mic')target.micBlocked=false;else if(m.action==='camera-off'){target.cameraAllowed=false;target.cameraRequested=false;target.camera=false;}else if(m.action==='approve-camera'){target.cameraAllowed=true;target.cameraRequested=false;}else if(m.action==='deny-camera'){target.cameraAllowed=false;target.cameraRequested=false;}else return;
+    if(m.action==='block-chat'){target.chatBlocked=true;}else if(m.action==='allow-chat'){target.chatBlocked=false;}else if(m.action==='mute'){target.micBlocked=true;target.mic=false;}else if(m.action==='allow-mic')target.micBlocked=false;else if(m.action==='camera-off'){target.cameraAllowed=false;target.cameraRequested=false;target.camera=false;}else if(m.action==='approve-camera'){target.cameraAllowed=true;target.cameraRequested=false;}else if(m.action==='deny-camera'){target.cameraAllowed=false;target.cameraRequested=false;}else return;
     send(target.ws,{type:'moderation',action:m.action});state(r);return;
    }
    if(m.type==='request-camera'&&!host){p.cameraRequested=true;state(r);return;}
    if(m.type==='media'){p.mic=m.mic===true&&!p.micBlocked&&p.inCall;p.camera=m.camera===true&&(host||p.cameraAllowed)&&p.inCall;state(r);return;}
-   if(m.type==='typing'){
+   if(m.type==='typing'){if(p.chatBlocked)return;
     if(!rate('typing:'+p.id,4,2000))return;const target=m.to?r.people.get(m.to):null;if(m.to&&!target)return;const event={type:'typing',from:p.id,name:p.name,to:target?.id||null,active:m.active===true};if(target)send(target.ws,event);else for(const x of r.people.values())if(x!==p)send(x.ws,event);return;
    }
-   if(m.type==='chat'){const text=clean(m.text,1500),target=m.to?r.people.get(m.to):null;if(m.to&&!target)return send(ws,{type:'error',message:'This participant is no longer in the room.'});if(text){const message={type:'chat',id:randomUUID(),from:p.id,name:p.name,to:target?.id||null,toName:target?.name||null,text,at:Date.now()};r.history.push(message);if(r.history.length>100)r.history.shift();if(target){send(p.ws,message);if(target!==p)send(target.ws,message);}else broadcast(r,message);persist();}return;}
+   if(m.type==='reaction'){if(['❤️','👏','😂','🎉'].includes(m.emoji)&&rate('reaction:'+p.id,3,3000))broadcast(r,{type:'reaction',name:p.name,emoji:m.emoji});return;}
+   if(m.type==='queue-vote'){const item=r.queue.find(q=>q.id===m.id);if(item&&rate('vote:'+p.id,10,5000)){item.votes??=[];item.votes=item.votes.includes(p.id)?item.votes.filter(id=>id!==p.id):[...item.votes,p.id];state(r);}return;}
+   if(m.type==='chat'){if(p.chatBlocked)return send(ws,{type:'error',message:'Chat is paused by the host.'});const text=clean(m.text,1500),target=m.to?r.people.get(m.to):null;if(m.to&&!target)return send(ws,{type:'error',message:'This participant is no longer in the room.'});if(text){const message={type:'chat',id:randomUUID(),from:p.id,name:p.name,to:target?.id||null,toName:target?.name||null,text,at:Date.now()};r.history.push(message);if(r.history.length>100)r.history.shift();if(target){send(p.ws,message);if(target!==p)send(target.ws,message);}else broadcast(r,message);persist();}return;}
    if(m.type==='theme-access'&&host){r.guestThemes=!!m.enabled;state(r);return;}
    if(m.type==='autoplay'&&host){r.autoplay=!!m.enabled;state(r);return;}
    if(m.type==='read'&&Array.isArray(m.ids)){for(const id of m.ids.slice(0,100)){const item=r.history.find(x=>x.id===id);if(!item||item.from===p.id||(item.to&&item.to!==p.id))continue;item.readBy??=[];if(item.readBy.includes(p.id))continue;item.readBy.push(p.id);const sender=r.people.get(item.from);send(sender?.ws,{type:'read',id,by:p.id,name:p.name});}persist();return;}
