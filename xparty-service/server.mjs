@@ -90,7 +90,7 @@ export function createXparty(options={}) {
   if(req.method!=='GET')return json(405,{error:'Method not allowed'});
   let pathname;try{pathname=decodeURIComponent(url.pathname);}catch{return json(400,{error:'Invalid URL'});}
   // Serve the application at the short root URL, retaining old /xparty/ links.
-  if(pathname==='/')pathname='/xparty/index.html';else if(!pathname.startsWith('/xparty/')&&/^\/(?:app.js|config.js|style.css|sync.js|settings.js|icons.js|accounts.js|ui-support.js)$/.test(pathname))pathname='/xparty'+pathname;
+  if(pathname==='/')pathname='/xparty/index.html';else if(!pathname.startsWith('/xparty/')&&/^\/(?:app.js|config.js|style.css|sync.js|settings.js|icons.js|accounts.js|ui-support.js|guidelines.html)$/.test(pathname))pathname='/xparty'+pathname;
   if(pathname.endsWith('/'))pathname+='index.html';const path=resolve(ROOT,'.'+pathname);if(!path.startsWith(ROOT+'/'))return json(403,{error:'Forbidden'});
   try{const data=await readFile(path);res.writeHead(200,{'Content-Type':({'.html':'text/html','.css':'text/css','.js':'text/javascript'})[extname(path)]||'application/octet-stream','Cache-Control':'no-cache'});res.end(data);}catch{return json(404,{error:'Not found'});}
  });
