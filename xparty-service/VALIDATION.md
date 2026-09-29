@@ -95,3 +95,15 @@ Room/call screenshots with color bars and green moving images show generated tes
 - Physical-device echo/distortion, account OTP delivery, database RLS/deletion, and provider authentication are not live-validated. Accounts remain disabled until Supabase and email/SMS/Google configuration is complete.
 - Vimeo, Dailymotion, SoundCloud, Netflix and Prime are not supported by this release. They are not advertised as functioning players. Additional official player adapters need separate synchronization validation; Netflix/Prime require a different authorized integration approach.
 - Exact xparty.onrender.com remains unassigned; dashboard access requires sign-in. Existing URLs retained, no new randomly suffixed hostname created.
+
+## 0.6 control/recovery release — 2026-09-29
+
+- Seven Node integration/unit tests pass, including host approvals, repeated review safety, expiry, exclusive shared control, host override, reserved two-person seats, socket replacement, host grace/handoff, and the existing signaling/buffering/privacy tests.
+- `recovery-browser.cjs`: real browser Back/Forward plus a closed/reopened tab recover the same guest ID in a full room; mode changes propagate; rename works; focused call, movie PiP controls, keyboard resize and 390px layout verified; end-room confirmation clears both participants.
+- `room-ui.cjs`: responsive controls across 320px, 390px, desktop and landscape viewports, unread counts/read receipts, room theme permissions, settings Save and existing account setup notice pass.
+- `youtube-browser.cjs`: simulated IFrame API corrected an injected 2-second drift to 0.019s; no seek loop while buffering; native pause cannot overwrite room playback; host-policy-approved guest controls work. This is not a real YouTube network/CDN test.
+- `browser.cjs`: two isolated browser contexts establish actual WebRTC with synthetic cameras/microphones, receive decoded video/audio packets, stop mic transmission, switch camera, and retain one audio output per peer. Real local WebM transfer/playback drift measured 0.015s. Refresh recovers file/chat.
+- Browser JavaScript error lists are empty. Mobile focus screenshot inspected; an overflowing PiP flex row was fixed and retested with button geometry assertions.
+- Playback correction, shared buffering recovery and clock rules retained. Permission commands wrap the existing timeline rather than replacing it.
+
+Not validated: physical devices on separate networks, acoustic echo behavior, real provider streaming under network loss, distributed scale or durable recovery across service restarts. TURN and optional account providers remain unconfigured. See docs/PARTY-ARCHITECTURE.md for current versus planned architecture.

@@ -18,6 +18,7 @@ test('room access, sync, signaling, readiness, resume and end-to-end cleanup',as
   a.send('chat',{text:'<script>alert(1)</script>'});assert.equal((await b.next('chat')).text,'<script>alert(1)</script>');assert.equal(third.queue.some(m=>m.type==='chat'),false);
   b.send('source',{source:{type:'youtube',videoId:'dQw4w9WgXcQ'}});await new Promise(r=>setTimeout(r,50));assert.equal(app.rooms.get(aw.room.code).source,null);
   a.send('source',{source:{type:'youtube',videoId:'dQw4w9WgXcQ'}});const source=(await b.next('state',m=>m.room.source?.type==='youtube')).room.source;
+  a.send('party-mode',{mode:'SHARED_CONTROL'});await b.next('state',m=>m.room.mode==='SHARED_CONTROL');
   b.send('playback',{sourceId:source.id,position:15,playing:true});const playback=await a.next('playback');assert.equal(playback.playback.position,15);assert.equal(playback.playback.playing,true);
   a.send('source',{source:{type:'file',size:1024,mime:'video/mp4',title:'test.mp4'}});const file=(await b.next('state',m=>m.room.source?.type==='file')).room.source;
   b.send('playback',{sourceId:source.id,position:100,playing:true});await new Promise(r=>setTimeout(r,50));assert.equal(app.rooms.get(aw.room.code).playback.playing,false);
@@ -25,12 +26,13 @@ test('room access, sync, signaling, readiness, resume and end-to-end cleanup',as
   const uploaded=await fetch(`http://127.0.0.1:${port}/api/file/${file.id}`,{method:'PUT',headers:{Authorization:'Bearer '+aw.token,'X-File-Offset':'0'},body:Buffer.alloc(1024,42)});assert.equal(uploaded.status,200);
   const download=await fetch(`http://127.0.0.1:${port}/api/file/${file.id}`,{headers:{Authorization:'Bearer '+bw.token}});assert.deepEqual(Buffer.from(await download.arrayBuffer()),Buffer.alloc(1024,42));
   a.send('ready',{sourceId:file.id,ready:true});b.send('ready',{sourceId:file.id,ready:true});await b.next('state',m=>m.room.people.every(p=>p.ready));
+  a.send('party-mode',{mode:'HOST_APPROVAL'});a.send('party-mode',{mode:'SHARED_CONTROL'});await b.next('state',m=>m.room.mode==='SHARED_CONTROL'&&!m.room.controller);
   b.send('playback',{sourceId:file.id,position:0,playing:true});assert.equal((await a.next('playback')).playback.playing,true);
   b.ws.close();await new Promise(r=>setTimeout(r,80));const resumed=await client(port);resumed.send('resume',{token:bw.token});assert.equal((await resumed.next('welcome')).id,bw.id);
   resumed.send('request-camera');await a.next('state',m=>m.room.people.some(p=>p.id===bw.id&&p.cameraRequested));
   a.send('moderate',{target:bw.id,action:'approve-camera'});await resumed.next('moderation');resumed.send('media',{camera:true,mic:true});await a.next('state',m=>m.room.people.some(p=>p.id===bw.id&&p.camera));
   a.send('moderate',{target:bw.id,action:'mute'});await resumed.next('moderation',m=>m.action==='mute');await a.next('state',m=>m.room.people.some(p=>p.id===bw.id&&p.micBlocked&&!p.mic));
-  resumed.send('queue-add',{videoId:'dQw4w9WgXcQ',title:'Queue test'});const queued=(await a.next('state',m=>m.room.queue.length===1)).room.queue[0];a.send('vote',{id:queued.id});await a.next('state',m=>m.room.queue[0]?.votes.length===2);
+  a.send('queue-add',{videoId:'dQw4w9WgXcQ',title:'Queue test'});const queued=(await a.next('state',m=>m.room.queue.length===1)).room.queue[0];assert.equal(queued.votes,undefined);
   a.send('transfer-host',{target:bw.id});await resumed.next('state',m=>m.room.hostId===bw.id);resumed.send('transfer-host',{target:aw.id});await a.next('state',m=>m.room.hostId===aw.id);
   a.send('kick',{target:bw.id});await resumed.next('kicked');const rejected=await client(port);rejected.send('resume',{token:bw.token});await rejected.next('resume-failed');
   // Kick revokes the resume credential.

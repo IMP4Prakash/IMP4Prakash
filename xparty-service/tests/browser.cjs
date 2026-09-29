@@ -10,7 +10,8 @@ for(const context of [desktop,mobile])await context.addInitScript(()=>{
   const Orig=window.RTCPeerConnection;
   window.RTCPeerConnection=class extends Orig{constructor(...args){super(...args);window.__pcs??=[];window.__pcs.push(this);for(const event of ['connectionstatechange','iceconnectionstatechange','signalingstatechange','negotiationneeded'])this.addEventListener(event,()=>console.log('RTC',event,this.connectionState,this.iceConnectionState,this.signalingState));}};
 });
-const a=await desktop.newPage(),b=await mobile.newPage();for(const page of[a,b]){page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{console.log('browser:',m.type(),m.text());});}
+const a=await desktop.newPage(),b=await mobile.newPage();for(const p of[a,b])await p.addInitScript(()=>localStorage.setItem('xparty-consent',JSON.stringify({essential:true,preferences:true,analytics:false})));
+for(const page of[a,b]){page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{console.log('browser:',m.type(),m.text());});}
 await a.goto('http://localhost:8787/xparty/');await a.screenshot({path:'../Xparty-desktop-lobby.png',fullPage:true});
 await a.click('#create-toggle');await a.fill('#name','Prakash');await a.click('#create');await a.waitForSelector('#room:not([hidden])');const code=await a.locator('#room-code').innerText();
 await b.goto('http://localhost:8787/xparty/');await b.fill('#code',code);await b.locator('#join-button').click();await b.waitForSelector('#room:not([hidden])');
@@ -34,7 +35,7 @@ assert.ok(await b.locator('#file-player').getAttribute('src'));
 await a.click('#play');await b.waitForFunction(()=>document.querySelector('#file-player').currentTime>1&&!document.querySelector('#file-player').paused);
 const times=await Promise.all([a,b].map(p=>p.locator('#file-player').evaluate(v=>v.currentTime)));assert.ok(Math.abs(times[0]-times[1])<1,JSON.stringify(times));
 console.log('PASS: Host-only file selection, authenticated HTTPS file transfer and synchronized playback; drift='+Math.abs(times[0]-times[1]).toFixed(3)+'s');
-await b.click('#play');await a.waitForFunction(()=>document.querySelector('#file-player').paused);console.log('PASS: Guest pause propagated to host');
+await a.locator('#room-menu>summary').click();await a.click('#open-requests');await a.selectOption('#approval-policy','approve');await a.click('#save-approval');await a.locator('#requests-dialog .close-dialog').click();await b.click('#play');await a.waitForFunction(()=>document.querySelector('#file-player').paused);console.log('PASS: Guest pause propagated to host');
 await b.reload();await b.waitForSelector('#room:not([hidden])');await b.waitForFunction(()=>document.querySelector('#file-player').readyState>=2);await b.getByText('Ready for movie night?',{exact:true}).waitFor();console.log('PASS: Refresh restores room, chat and local file');
 await a.screenshot({path:'../Xparty-desktop-room.png',fullPage:true});await b.screenshot({path:'../Xparty-mobile-room.png',fullPage:true});
 assert.equal(await b.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);

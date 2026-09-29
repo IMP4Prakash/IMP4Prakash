@@ -1,5 +1,5 @@
 const defaults={theme:'lime',language:'en',noise:true,echo:true,quality:'balanced',notify_join:false,notify_leave:false,notify_message:true,notify_sent:false,notify_read:false};
-let saved={};try{saved=JSON.parse(localStorage.getItem('xparty-settings')||'{}');}catch{}
+let saved={};try{if(JSON.parse(localStorage.getItem('xparty-consent')||'{}').preferences)saved=JSON.parse(localStorage.getItem('xparty-settings')||'{}');}catch{}
 export const preferences={...defaults,...saved};
 const words={
 'Home':['होम','ಮುಖಪುಟ'],'Settings':['सेटिंग्स','ಸೆಟ್ಟಿಂಗ್‌ಗಳು'],'About':['परिचय','ಪರಿಚಯ'],'About Xparty':['Xparty के बारे में','Xparty ಬಗ್ಗೆ'],'Return to room':['कमरे में लौटें','ಕೋಣೆಗೆ ಹಿಂತಿರುಗಿ'],
@@ -20,6 +20,8 @@ Object.assign(words,{"Video call and Chat are separate toggles. Hiding a panel k
 export function t(text){return words[text]?.[preferences.language==='hi'?0:preferences.language==='kn'?1:-1]||text;}
 const staticNodes=[];const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let node;while(node=walker.nextNode()){const key=node.textContent.trim();if(words[key])staticNodes.push({node,key,prefix:node.textContent.match(/^\s*/)[0],suffix:node.textContent.match(/\s*$/)[0]});}
 export function localize(){document.documentElement.lang=preferences.language;for(const entry of staticNodes)if(entry.node.isConnected)entry.node.textContent=entry.prefix+t(entry.key)+entry.suffix;}
-export function savePreferences(){try{localStorage.setItem('xparty-settings',JSON.stringify(preferences));}catch{}document.documentElement.dataset.theme=preferences.theme;localize();}
+export function savePreferences(){try{if(JSON.parse(localStorage.getItem('xparty-consent')||'{}').preferences)localStorage.setItem('xparty-settings',JSON.stringify(preferences));}catch{}document.documentElement.dataset.theme=preferences.theme;localize();}
 export function resetPreferences(){Object.assign(preferences,defaults);savePreferences();}
 savePreferences();
+
+window.addEventListener('xparty:consent',savePreferences);

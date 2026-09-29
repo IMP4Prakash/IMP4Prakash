@@ -21,3 +21,11 @@ Optional account setup is in xparty-service/accounts/SETUP.md. No Supabase/SMS/G
 
 
 Revision 0.5 keeps the proven playback timing intact and updates call audio/UI. New room codes have seven characters; eight-character codes remain accepted. Both frontend copies must deploy together. Rooms held only in memory clear when the backend restarts. No hostname, paid resource, or account provider was changed in this revision.
+
+### 0.6 — party controls and recovery
+
+Includes Host Approval / Host Only / Shared Control, approval policies, 120-second reserved seats and host reconnect grace, persistent same-browser rejoin, optional nickname, storage consent, and a resizable focused-call layout with in-app movie PiP. Existing sync correction is preserved. Architecture/roadmap: `xparty-service/docs/PARTY-ARCHITECTURE.md`.
+
+Both existing Render services track `xparty/first-build-20260928` with auto deploy off. Publish backend and static frontend manually after the same commit is pushed. The static site's config continues to point to the existing backend. The exact `xparty.onrender.com` hostname has NOT been assigned; the static service currently has `xparty-wsev.onrender.com`. Do not treat renaming a service label as proof its URL changed, or select another random suffix.
+
+No persistent database, paid plan, TURN server, OTP provider or Kubernetes deployment is provisioned by this release. A backend restart still clears in-memory rooms on the current hosting setup. Do not merge the main-site draft PR without the owner's approval.
