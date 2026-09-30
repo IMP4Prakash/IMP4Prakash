@@ -56,7 +56,7 @@ function socialView(view='profile'){
  if(!$('account-dialog').open)$('account-dialog').showModal();
 }
 for(const b of document.querySelectorAll('[data-social-view]'))b.onclick=()=>socialView(b.dataset.socialView);
-$('nav-friends').onclick=()=>socialView('friends');
-$('room-add-friend').onclick=()=>{socialView('friends');if(!$('friend-id').disabled&&!$('account-profile').hidden)$('friend-id').focus();};
+$('nav-friends').onclick=()=>{if(window.XPARTY_SESSION_STATE?.().inRoom)window.dispatchEvent(new Event('xparty:room-friends'));else socialView('friends');};
+$('room-add-friend').onclick=()=>{if(window.XPARTY_SESSION_STATE?.().inRoom){window.dispatchEvent(new Event('xparty:room-friends'));return;}socialView('friends');if(!$('friend-id').disabled&&!$('account-profile').hidden)$('friend-id').focus();};
 $('nav-messages').onclick=()=>{if(window.XPARTY_SESSION_STATE?.().inRoom){$('return-room').click();$('panel-chat').click();$('message-input').focus();}else socialView('messages');};
 $('open-profile').onclick=()=>socialView('profile');$('open-friends').onclick=()=>socialView('friends');
