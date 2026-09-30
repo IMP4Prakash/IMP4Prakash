@@ -1,0 +1,7 @@
+const {chromium}=require(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES ? process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES+'/playwright' : 'playwright');
+(async()=>{const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||undefined,args:['--no-sandbox','--allow-loopback-in-peer-connection','--disable-features=WebRtcHideLocalIpsWithMdns']});try{
+const a=await browser.newPage({viewport:{width:1440,height:1080},permissions:['camera','microphone']});await a.goto('http://localhost:8787/xparty/');await a.click('#preview');await a.screenshot({path:'../Xparty-preview.png',fullPage:true});await a.click('#leave');await a.selectOption('#capacity','4');await a.click('#create');await a.waitForSelector('#room:not([hidden])');const code=await a.locator('#room-code').textContent();const pages=[a];
+for(let i=1;i<4;i++){const b=await browser.newPage({permissions:['camera','microphone']});await b.goto('http://localhost:8787/xparty/');await b.fill('#code',code);await b.locator('#join-form button').click();await b.waitForSelector('#room:not([hidden])');pages.push(b);}
+for(const p of pages)await p.waitForFunction(()=>document.querySelector('#call-status').textContent.includes('3/3'));
+console.log('PASS: Four independent browser sessions, all six real WebRTC peer connections established.');
+}finally{await browser.close();}})().catch(e=>{console.error(e);process.exit(1);});
