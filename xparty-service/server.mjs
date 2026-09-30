@@ -8,6 +8,7 @@ import {randomBytes,randomUUID,createHmac} from 'node:crypto';
 import {WebSocketServer,WebSocket} from 'ws';
 import {createPartyControl,partyState} from './party-control.mjs';
 import {searchYouTube} from './youtube-search.mjs';
+import {createAttachmentStore} from './attachments.mjs';
 const ROOT=fileURLToPath(new URL('./public',import.meta.url));
 const MAX_FILE=250*1024*1024,CHUNK=2*1024*1024,MAX_STORAGE=1024*1024*1024;
 const clean=(v,n)=>String(v??'').replace(/[\u0000-\u001f]/g,'').trim().slice(0,n);
@@ -29,6 +30,7 @@ export function createXparty(options={}) {
  const ip=req=>process.env.TRUST_PROXY==='1'?String(req.headers['x-forwarded-for']||req.socket.remoteAddress).split(',').at(-1).trim():req.socket.remoteAddress;
  function send(ws,obj){if(ws?.readyState===WebSocket.OPEN){if(ws.bufferedAmount>1024*1024)return ws.close(1013,'Slow connection');ws.send(JSON.stringify(obj));}}
  const online=p=>p.ws?.readyState===WebSocket.OPEN;
+ const attachments=createAttachmentStore({online:p=>online(p)&&clients.get(p.token)===p&&rooms.has(p.code)});
  function broadcast(r,obj){for(const p of r.people.values())send(p.ws,obj);}
  function snapshot(r){return {code:r.code,hostId:r.hostId,ownerId:r.ownerId||r.hostId,...partyState(r),hostReconnecting:!online(r.people.get(r.hostId)||{}),theme:r.theme||null,guestThemes:!!r.guestThemes,autoplay:r.autoplay!==false,capacity:r.capacity,locked:r.locked,source:r.source,playback:r.playback,queue:r.queue||[],people:[...r.people.values()].map(p=>({id:p.id,name:p.name,session:p.session||0,online:online(p),presence:online(p)?'ACTIVE':p.left?'LEFT':'DISCONNECTED',reservedUntil:p.reservedUntil||null,inCall:!!p.inCall,mic:p.mic,camera:p.camera,ready:p.ready,loadStatus:p.loadStatus||'',chatBlocked:!!p.chatBlocked,micBlocked:p.micBlocked,cameraAllowed:p.cameraAllowed,cameraRequested:p.cameraRequested})),serverTime:Date.now()};}
  function state(r){syncBuffering(r);broadcast(r,{type:'state',room:snapshot(r)});persist();}
@@ -43,7 +45,7 @@ export function createXparty(options={}) {
   r.playback={position:0,playing:false,updatedAt:Date.now(),revision:r.playback.revision+1};for(const x of r.people.values()){x.ready=false;x.buffering=false;x.loadStatus=s.type==='file'?'Waiting for upload':'Loading';}state(r);return true;
  }
  function remove(p,kicked=false){const r=rooms.get(p.code);if(!r)return;clients.delete(p.token);r.people.delete(p.id);r.queue=(r.queue||[]).map(q=>({...q,votes:(q.votes||[]).filter(x=>x!==p.id)}));
-  if(!r.people.size){if(r.source?.type==='file')dropFile(r.source.id);rooms.delete(r.code);persist();return;}
+  if(!r.people.size){if(r.source?.type==='file')dropFile(r.source.id);attachments.clearRoom(r.code);rooms.delete(r.code);persist();return;}
   if(r.hostId===p.id){r.hostId=([...r.people.values()].find(online)||r.people.values().next().value).id;const h=r.people.get(r.hostId);h.cameraAllowed=true;h.micBlocked=false;}
   if(r.source?.owner===p.id&&r.source.type==='file'&&!r.source.uploaded){dropFile(r.source.id);r.source=null;r.playback.playing=false;}
   state(r);
@@ -53,10 +55,10 @@ export function createXparty(options={}) {
  const authenticate=req=>{const p=clients.get(String(req.headers.authorization||'').replace(/^Bearer /,''));return p&&online(p)?p:null;};
  const server=http.createServer(async(req,res)=>{
   const url=new URL(req.url,'http://localhost');if(originOK(req)){res.setHeader('Access-Control-Allow-Origin',req.headers.origin);res.setHeader('Vary','Origin');}
-  res.setHeader('Access-Control-Allow-Headers','Authorization, Content-Type, X-File-Offset');res.setHeader('Access-Control-Allow-Methods','GET, PUT, OPTIONS');res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');
+  res.setHeader('Access-Control-Allow-Headers','Authorization, Content-Type, X-File-Offset, X-Attachment-Name, X-Attachment-To');res.setHeader('Access-Control-Allow-Methods','GET, PUT, POST, OPTIONS');res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');
   const json=(status,body)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(body));};
   if(req.method==='OPTIONS'){res.writeHead(originOK(req)?204:403);return res.end();}
-  if(url.pathname==='/health')return json(200,{ok:true,service:'Xparty',version:'0.8.0'});
+  if(url.pathname==='/health')return json(200,{ok:true,service:'Xparty',version:'0.9.0'});
   if(url.pathname==='/api/accounts/config')return json(200,{enabled:!!(process.env.SUPABASE_URL&&publicAuthKey),url:publicAuthKey?process.env.SUPABASE_URL||null:null,publicKey:publicAuthKey,phoneEnabled:process.env.SUPABASE_PHONE_ENABLED==='true'});
   if(url.pathname==='/api/room-status'&&req.method==='GET'){
    if(req.headers.origin&&!originOK(req))return json(403,{error:'Origin not allowed'});
@@ -66,6 +68,9 @@ export function createXparty(options={}) {
   }
   if(url.pathname.startsWith('/api/')){
    if(req.headers.origin&&!originOK(req))return json(403,{error:'Origin not allowed'});const p=authenticate(req);if(!p)return json(401,{error:'Your room connection is offline. Reconnect and retry.'});const r=rooms.get(p.code);
+   if(url.pathname==='/api/attachment'&&req.method==='POST'&&!rate('attachment:'+p.id,6,60000))return json(429,{error:'Please wait before uploading another attachment.'});
+   if(url.pathname.startsWith('/api/attachment/')&&req.method==='GET'&&!rate('attachment-download:'+p.id,60,60000))return json(429,{error:'Please wait before downloading again.'});
+   if(await attachments.handle(req,res,url,p,r,json))return;
    if(url.pathname==='/api/search'&&req.method==='GET'){
     if(!rate('search:'+p.id,30,60000))return json(429,{error:'Please wait a moment before searching again.'});const q=clean(url.searchParams.get('q'),100);if(q.length<2)return json(400,{error:'Enter at least two characters'});
     const cache=searchCache.get(q.toLowerCase());if(cache&&Date.now()-cache.at<300000)return json(200,{items:cache.items});
@@ -90,7 +95,7 @@ export function createXparty(options={}) {
   if(req.method!=='GET')return json(405,{error:'Method not allowed'});
   let pathname;try{pathname=decodeURIComponent(url.pathname);}catch{return json(400,{error:'Invalid URL'});}
   // Serve the application at the short root URL, retaining old /xparty/ links.
-  if(pathname==='/')pathname='/xparty/index.html';else if(!pathname.startsWith('/xparty/')&&/^\/(?:app.js|config.js|style.css|sync.js|settings.js|icons.js|accounts.js|ui-support.js|guidelines.html)$/.test(pathname))pathname='/xparty'+pathname;
+  if(pathname==='/')pathname='/xparty/index.html';else if(!pathname.startsWith('/xparty/')&&/^\/(?:app.js|config.js|style.css|compact.css|sync.js|settings.js|icons.js|accounts.js|ui-support.js|guidelines.html)$/.test(pathname))pathname='/xparty'+pathname;
   if(pathname.endsWith('/'))pathname+='index.html';const path=resolve(ROOT,'.'+pathname);if(!path.startsWith(ROOT+'/'))return json(403,{error:'Forbidden'});
   try{const data=await readFile(path);res.writeHead(200,{'Content-Type':({'.html':'text/html','.css':'text/css','.js':'text/javascript'})[extname(path)]||'application/octet-stream','Cache-Control':'no-cache'});res.end(data);}catch{return json(404,{error:'Not found'});}
  });
@@ -98,7 +103,7 @@ export function createXparty(options={}) {
  function dispatch(ws,m,approved=false){
    const p=ws.person,r=p&&rooms.get(p.code);if(!r||r.people.get(p.id)!==p||p.ws!==ws)return;const host=p.id===r.hostId||approved;if(!approved&&control.handle(r,p,m))return;
    if(m.type==='leave'){p.left=true;p.reservedUntil=null;control.cancel(r,'Participant left.');if(r.ownerId!==p.id){remove(p);}else{p.ws=null;p.buffering=false;p.inCall=false;p.mic=false;p.camera=false;p.ready=false;if(r.hostId===p.id){const next=[...r.people.values()].find(x=>x!==p&&online(x));if(next){r.hostId=next.id;next.cameraAllowed=true;next.micBlocked=false;}}state(r);}ws.person=null;return ws.close(1000,'Left');}
-   if(m.type==='end-room'&&host){for(const x of r.people.values()){clients.delete(x.token);send(x.ws,{type:'ended',message:'The host ended the room.'});x.ws?.close(1000,'Ended');}if(r.source?.type==='file')dropFile(r.source.id);rooms.delete(r.code);persist();return;}
+   if(m.type==='end-room'&&host){for(const x of r.people.values()){clients.delete(x.token);send(x.ws,{type:'ended',message:'The host ended the room.'});x.ws?.close(1000,'Ended');}if(r.source?.type==='file')dropFile(r.source.id);attachments.clearRoom(r.code);rooms.delete(r.code);persist();return;}
    if(m.type==='kick'&&host){const target=r.people.get(m.target);if(target&&target!==p&&target.id!==r.ownerId){send(target.ws,{type:'kicked',message:'The host removed you from the room.'});remove(target,true);target.ws?.close(4003,'Removed');}return;}
    if(m.type==='transfer-host'&&host){control.cancel(r,'Host changed.');const target=r.people.get(m.target);if(target&&target!==p&&online(target)){r.hostId=target.id;r.ownerId=target.id;target.cameraAllowed=true;target.micBlocked=false;state(r);}return;}
    if(m.type==='moderate'&&host){const target=r.people.get(m.target);if(!target||target===p)return;
@@ -112,7 +117,7 @@ export function createXparty(options={}) {
    }
    if(m.type==='reaction'){if(['❤️','👏','😂','🎉'].includes(m.emoji)&&rate('reaction:'+p.id,3,3000))broadcast(r,{type:'reaction',name:p.name,emoji:m.emoji});return;}
    if(m.type==='queue-vote'){const item=r.queue.find(q=>q.id===m.id);if(item&&rate('vote:'+p.id,10,5000)){item.votes??=[];item.votes=item.votes.includes(p.id)?item.votes.filter(id=>id!==p.id):[...item.votes,p.id];state(r);}return;}
-   if(m.type==='chat'){if(p.chatBlocked)return send(ws,{type:'error',message:'Chat is paused by the host.'});const text=clean(m.text,1500),target=m.to?r.people.get(m.to):null;if(m.to&&!target)return send(ws,{type:'error',message:'This participant is no longer in the room.'});if(text){const message={type:'chat',id:randomUUID(),from:p.id,name:p.name,to:target?.id||null,toName:target?.name||null,text,at:Date.now()};r.history.push(message);if(r.history.length>100)r.history.shift();if(target){send(p.ws,message);if(target!==p)send(target.ws,message);}else broadcast(r,message);persist();}return;}
+   if(m.type==='chat'){if(p.chatBlocked)return send(ws,{type:'error',message:'Chat is paused by the host.'});const text=clean(m.text,1500),target=m.to?r.people.get(m.to):null;if(m.to&&!target)return send(ws,{type:'error',message:'This participant is no longer in the room.'});const attachment=m.attachmentId?attachments.publish(m.attachmentId,p,target?.id):null;if(m.attachmentId&&!attachment)return send(ws,{type:'error',message:'This attachment cannot be shared with this recipient.'});if(text||attachment){const message={type:'chat',id:randomUUID(),from:p.id,name:p.name,to:target?.id||null,toName:target?.name||null,text,at:Date.now(),...(attachment?{attachment}: {})};r.history.push(message);if(r.history.length>100){const old=r.history.shift();if(old.attachment)attachments.remove(old.attachment.id);}if(target){send(p.ws,message);if(target!==p)send(target.ws,message);}else broadcast(r,message);persist();}return;}
    if(m.type==='theme-access'&&host){r.guestThemes=!!m.enabled;state(r);return;}
    if(m.type==='autoplay'&&host){r.autoplay=!!m.enabled;state(r);return;}
    if(m.type==='read'&&Array.isArray(m.ids)){for(const id of m.ids.slice(0,100)){const item=r.history.find(x=>x.id===id);if(!item||item.from===p.id||(item.to&&item.to!==p.id))continue;item.readBy??=[];if(item.readBy.includes(p.id))continue;item.readBy.push(p.id);const sender=r.people.get(item.from);send(sender?.ws,{type:'read',id,by:p.id,name:p.name});}persist();return;}
@@ -125,7 +130,7 @@ export function createXparty(options={}) {
    if(m.type==='queue-add'&&host){if(!/^[\w-]{11}$/.test(m.videoId)||r.queue.length>=50)return false;if(!r.queue.some(q=>q.videoId===m.videoId))r.queue.push({id:randomUUID(),videoId:m.videoId,title:clean(m.title,150)||'YouTube video',addedBy:p.name,createdAt:Date.now()});state(r);return true;}
    if(m.type==='vote')return;
    if(m.type==='queue-remove'&&host){r.queue=r.queue.filter(q=>q.id!==m.id);state(r);return true;}
-   if(['queue-play','next','previous'].includes(m.type)&&host){const item=m.type==='previous'?r.previousSource:m.type==='next'?r.queue[0]:r.queue.find(q=>q.id===m.id);if(item){const previous=r.source?.type==='youtube'?{videoId:r.source.videoId,title:r.source.title}:null;r.queue=r.queue.filter(q=>q.id!==item.id);control.cancel(r,'Video changed.');const result=choose(r,p,{type:'youtube',videoId:item.videoId,title:item.title});r.previousSource=previous;return result;}return false;}
+   if(['queue-play','next','previous'].includes(m.type)&&host){const item=m.type==='previous'?r.previousSource:m.type==='next'?(r.autoplay===false?[...r.queue].sort((a,b)=>(b.votes?.length||0)-(a.votes?.length||0)||a.createdAt-b.createdAt)[0]:r.queue[0]):r.queue.find(q=>q.id===m.id);if(item){const previous=r.source?.type==='youtube'?{videoId:r.source.videoId,title:r.source.title}:null;r.queue=r.queue.filter(q=>q.id!==item.id);control.cancel(r,'Video changed.');const result=choose(r,p,{type:'youtube',videoId:item.videoId,title:item.title});r.previousSource=previous;return result;}return false;}
    if(m.type==='ready'&&m.sourceId===r.source?.id){p.ready=m.ready===true;p.loadStatus=clean(m.status,100)||(p.ready?'Ready':'Loading');state(r);return;}
    if(m.type==='buffering'&&r.source?.type==='youtube'&&m.sourceId===r.source.id){p.buffering=m.buffering===true&&r.playback.playing;syncBuffering(r);return;}
    if(m.type==='rename'){const name=clean(m.name,24);if(name){p.name=name;state(r);}return;}
@@ -166,6 +171,6 @@ export function createXparty(options={}) {
  });
  const recovery=setInterval(()=>{for(const r of rooms.values()){control.sweep(r);const host=r.people.get(r.hostId);if(host&&!online(host)&&host.reservedUntil&&host.reservedUntil<=Date.now()){const next=[...r.people.values()].filter(online).sort((a,b)=>a.joinedAt-b.joinedAt)[0];if(next){control.cancel(r,'Host reconnect window elapsed.');r.hostId=next.id;next.cameraAllowed=true;next.micBlocked=false;state(r);}}}},250);recovery.unref();
  const maintenance=setInterval(()=>{for(const ws of wss.clients){if(!ws.alive){ws.terminate();continue;}ws.alive=false;ws.ping();}for(const[key,b]of buckets)if(b.until<Date.now())buckets.delete(key);},30000);maintenance.unref();
- return {server,rooms,close:async()=>{clearInterval(maintenance);clearInterval(recovery);clearTimeout(saveTimer);for(const ws of wss.clients)ws.terminate();await new Promise(r=>wss.close(r));await new Promise(r=>server.close(r));for(const id of files.keys())dropFile(id);}};
+ return {server,rooms,close:async()=>{clearInterval(maintenance);clearInterval(recovery);attachments.close();clearTimeout(saveTimer);for(const ws of wss.clients)ws.terminate();await new Promise(r=>wss.close(r));await new Promise(r=>server.close(r));for(const id of files.keys())dropFile(id);}};
 }
-if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){const app=createXparty();app.server.listen(Number(process.env.PORT||8787),'0.0.0.0',()=>console.log('Xparty 0.7 listening on '+(process.env.PORT||8787)));const stop=()=>app.close().then(()=>process.exit(0));process.on('SIGTERM',stop);process.on('SIGINT',stop);}
+if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){const app=createXparty();app.server.listen(Number(process.env.PORT||8787),'0.0.0.0',()=>console.log('Xparty 0.9 listening on '+(process.env.PORT||8787)));const stop=()=>app.close().then(()=>process.exit(0));process.on('SIGTERM',stop);process.on('SIGINT',stop);}
