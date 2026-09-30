@@ -47,3 +47,16 @@ function showPhoto(){$('profile-photo-preview').hidden=!photoData;$('profile-pho
 $('profile-photo').onchange=()=>run(async()=>{const file=$('profile-photo').files[0];if(!file)return;if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>1024*1024)throw Error('Choose a JPG, PNG or WebP photo smaller than 1 MB.');const bitmap=await createImageBitmap(file);const canvas=document.createElement('canvas');canvas.width=canvas.height=192;const size=Math.min(bitmap.width,bitmap.height);canvas.getContext('2d').drawImage(bitmap,(bitmap.width-size)/2,(bitmap.height-size)/2,size,size,0,0,192,192);bitmap.close();photoData=canvas.toDataURL('image/jpeg',.8);showPhoto();status('Photo ready. Press Save profile to store it.');});
 $('remove-photo').onclick=()=>{photoData=null;showPhoto();status('Press Save profile to remove the stored photo.');};
 $('delete-account').onclick=()=>run(async()=>{if(!session)return;if(!await window.XPARTY_ASK('Permanently delete your Xparty account, profile, friendships, private messages and call records? This cannot be undone.'))return;await endCall();check(await client.rpc('xparty_delete_my_account'));await client.auth.signOut({scope:'local'});sessionStorage.removeItem('xparty-google-token');session=null;friend=null;photoData=null;$('direct-chat').hidden=true;await refreshProfile();status('Your Xparty account and associated database records were deleted. Guest room data is separate.');});
+// Navigation opens distinct destinations without leaving the app.
+function socialView(view='profile'){
+ $('account-dialog').dataset.socialView=view;
+ $('account-dialog').querySelector('h2').textContent={profile:'Your profile',friends:'Friends',messages:'Messages'}[view];
+ for(const b of document.querySelectorAll('[data-social-view]'))b.setAttribute('aria-selected',b.dataset.socialView===view);
+ $('social-view-note').textContent=view==='friends'?'Add a friend by profile ID, or choose someone from your friends.':view==='messages'?'Choose a friend to open your private conversation.':'Your profile and privacy choices.';
+ if(!$('account-dialog').open)$('account-dialog').showModal();
+}
+for(const b of document.querySelectorAll('[data-social-view]'))b.onclick=()=>socialView(b.dataset.socialView);
+$('nav-friends').onclick=()=>socialView('friends');
+$('room-add-friend').onclick=()=>{socialView('friends');if(!$('friend-id').disabled&&!$('account-profile').hidden)$('friend-id').focus();};
+$('nav-messages').onclick=()=>{if(window.XPARTY_SESSION_STATE?.().inRoom){$('return-room').click();$('panel-chat').click();$('message-input').focus();}else socialView('messages');};
+$('open-profile').onclick=()=>socialView('profile');$('open-friends').onclick=()=>socialView('friends');
